@@ -1,0 +1,22 @@
+digraph g {
+    subgraph cluster {
+        style="rounded,filled"
+        color=black
+        fillcolor=2
+        colorscheme=paired10
+        label = "Branch Re"
+        node[shape=record style="filled" color=black fillcolor=white]
+        {
+            node[shape=diamond label="" fixedsize=true width=0.3 height=0.3 style=filled fillcolor=black]
+            hidden
+        }
+
+        {
+            node[label="0"]
+            a1
+        }
+        a1 -> hidden
+        a2 -> hidden
+        hidden -> a3
+    }
+}
