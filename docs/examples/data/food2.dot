@@ -1,0 +1,47 @@
+digraph G {
+    graph [compound=true]
+    subgraph cluster0 {
+    label = "FOOD::CALORIES"
+    subgraph cluster1 {
+    style="rounded,filled"
+    color=black
+    fillcolor=8
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    wiskas [label="{<counter> 1 | <key> 200 | { <left> . | pk:0 | <right> . }}"]
+    }
+
+    subgraph cluster2 {
+    style="rounded,filled"
+    color=black
+    fillcolor=8
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    apple [label="{<counter> 1 | <key> 100 | { <left> NULL | pk:1 | <right> . }}"]
+    pedigree_2 [label="{<counter> 1 | <key> 150 | { <left> . | pk:3 | <right> . }}"]
+    }
+
+    subgraph cluster3 {
+    style="rounded,filled"
+    color=black
+    fillcolor=8
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    pedigree_1 [label="{<counter> 1 | <key> 250 | { <left> . | pk:2 | <right> NULL }}"]
+    }
+
+    apple:right -> pedigree_2:left [dir=none constraint=false]
+    pedigree_2:right -> wiskas:left [dir=none constraint=false]
+    wiskas:right -> pedigree_1:left [dir=none]
+
+    wiskas -> pedigree_2 [ltail="cluster1", lhead="cluster3", dir=none, penwidth=3]
+    wiskas -> pedigree_1 [ltail="cluster1", lhead="cluster2", dir=none, penwidth=3]
+
+    }
+}

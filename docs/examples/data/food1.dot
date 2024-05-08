@@ -1,22 +1,59 @@
-digraph g {
-    subgraph cluster {
-        style="rounded,filled"
-        color=black
-        fillcolor=2
-        colorscheme=paired10
-        label = "Branch Re"
-        node[shape=record style="filled" color=black fillcolor=white]
-        {
-            node[shape=diamond label="" fixedsize=true width=0.3 height=0.3 style=filled fillcolor=black]
-            hidden
-        }
+digraph G {
+    graph [compound=true]
+    subgraph cluster0 {
+    label = "FOOD::NAME"
+    subgraph cluster1 {
+    style="rounded,filled"
+    color=black
+    fillcolor=9
+    colorscheme=paired10
+    label=""
 
-        {
-            node[label="0"]
-            a1
-        }
-        a1 -> hidden
-        a2 -> hidden
-        hidden -> a3
+    node[shape=record style="filled" color=black fillcolor=white]
+    apple [label="{<counter> 1 | <key> apple | { <left> NULL | pk:0 | <right> . }}"]
+    }
+    subgraph cluster2 {
+    style="rounded,filled"
+    color=black
+    fillcolor=9
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+
+    pedigree [label="{<counter> 2 | <key> pedigree | { <left> . | pk:2 | pk:3 | <right> . }}"]
+    water [label="{<counter> 1 | <key> water | { <left> . | pk:5 | <right> . }}"]
+
+    }
+    subgraph cluster3 {
+    style="rounded,filled"
+    color=black
+    fillcolor=9
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    wiskas [label="{<counter> 1 | <key> wiskas | { <left> . | pk:1 | <right> NULL }}"]
+    }
+
+    subgraph cluster4 {
+    style="rounded,filled"
+    color=black
+    fillcolor=9
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    sunflower [label="{<counter> 1 | <key> sunflower | { <left> . | pk:4 | <right> . }}"]
+    }
+
+    apple:right -> pedigree:left [dir=none constraint=false]
+    pedigree:right -> sunflower:left [dir=none constraint=false]
+    sunflower:right -> water:left [dir=none constraint=false]
+    water:right -> wiskas:left [dir=none constraint=false]
+
+    pedigree -> apple [ltail="cluster2", lhead="cluster1", dir=none, penwidth=3]
+    pedigree -> sunflower [ltail="cluster2", lhead="cluster4", dir=none, penwidth=3]
+    water -> wiskas [ltail="cluster2", lhead="cluster3", dir=none, penwidth=3]
     }
 }
