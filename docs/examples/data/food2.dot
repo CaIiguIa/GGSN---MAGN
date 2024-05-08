@@ -10,6 +10,7 @@ digraph G {
     label=""
 
     node[shape=record style="filled" color=black fillcolor=white]
+    apple [label="{<counter> 1 | <key> 100 | { <left> . | pk:1 | <right> . }}"]
     wiskas [label="{<counter> 1 | <key> 200 | { <left> . | pk:0 | <right> . }}"]
     }
 
@@ -21,8 +22,19 @@ digraph G {
     label=""
 
     node[shape=record style="filled" color=black fillcolor=white]
-    apple [label="{<counter> 1 | <key> 100 | { <left> NULL | pk:1 | <right> . }}"]
-    pedigree_2 [label="{<counter> 1 | <key> 150 | { <left> . | pk:3 | <right> . }}"]
+    pedigree_1 [label="{<counter> 1 | <key> 250 | { <left> . | pk:2 | <right> NULL }}"]
+    }
+
+    subgraph cluster4 {
+    style="rounded,filled"
+    color=black
+    fillcolor=8
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    water [label="{<counter> 1 | <key> 10 | { <left> NULL | pk:5 | <right> . }}"]
+    sunflower [label="{<counter> 1 | <key> 50 | { <left> . | pk:4 | <right> . }}"]
     }
 
     subgraph cluster3 {
@@ -33,15 +45,18 @@ digraph G {
     label=""
 
     node[shape=record style="filled" color=black fillcolor=white]
-    pedigree_1 [label="{<counter> 1 | <key> 250 | { <left> . | pk:2 | <right> NULL }}"]
+    pedigree_2 [label="{<counter> 1 | <key> 150 | { <left> . | pk:3 | <right> . }}"]
     }
 
+    water:right -> sunflower:left [dir=none constraint=false]
+    sunflower:right -> apple:left [dir=none constraint=false]
     apple:right -> pedigree_2:left [dir=none constraint=false]
     pedigree_2:right -> wiskas:left [dir=none constraint=false]
-    wiskas:right -> pedigree_1:left [dir=none]
+    wiskas:right -> pedigree_1:left [dir=none constraint=false]
 
-    wiskas -> pedigree_2 [ltail="cluster1", lhead="cluster3", dir=none, penwidth=3]
+    apple -> pedigree_2 [ltail="cluster1", lhead="cluster3", dir=none, penwidth=3]
     wiskas -> pedigree_1 [ltail="cluster1", lhead="cluster2", dir=none, penwidth=3]
+    apple -> sunflower [ltail="cluster1", lhead="cluster4", dir=none, penwidth=3]
 
     }
 }
