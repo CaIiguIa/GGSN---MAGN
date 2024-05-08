@@ -1,0 +1,61 @@
+digraph G {
+    graph [compound=true]
+    subgraph cluster0 {
+    label = "FOOD::ID"
+    subgraph cluster1 {
+    style="rounded,filled"
+    color=black
+    fillcolor=7
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    wiskas [label="{<counter> 1 | <key> 0 | { <left> NULL | pk:0 | <right> . }}"]
+    }
+    subgraph cluster2 {
+    style="rounded,filled"
+    color=black
+    fillcolor=7
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    apple [label="{<counter> 1 | <key> 1 | { <left> . | pk:1 | <right> . }}"]
+    pedigree_2 [label="{<counter> 1 | <key> 3 | { <left> . | pk:3 | <right> . }}"]
+    }
+
+    subgraph cluster3 {
+    style="rounded,filled"
+    color=black
+    fillcolor=7
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    pedigree_1 [label="{<counter> 1 | <key> 2 | { <left> . | pk:2 | <right> . }}"]
+    }
+
+    subgraph cluster4 {
+    style="rounded,filled"
+    color=black
+    fillcolor=7
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    sunflower [label="{<counter> 1 | <key> 4 | { <left> . | pk:4 | <right> . }}"]
+    water [label="{<counter> 1 | <key> 5 | { <left> . | pk:5 | <right> NULL }}"]
+    }
+
+    wiskas:right -> apple:left [dir=none constraint=false]
+    apple:right -> pedigree_1:left [dir=none constraint=false]
+    pedigree_1:right -> pedigree_2:left [dir=none constraint=false]
+    pedigree_2:right -> sunflower:left [dir=none constraint=false]
+
+
+    apple -> wiskas [ltail="cluster1", lhead="cluster4", dir=none, penwidth=3]
+    pedigree_2 -> pedigree_1 [ltail="cluster1", lhead="cluster4", dir=none, penwidth=3]
+    pedigree_2 -> sunflower [ltail="cluster1", lhead="cluster4", dir=none, penwidth=3]
+
+    }
+}

@@ -1,0 +1,48 @@
+digraph G {
+    graph [compound=true]
+    subgraph cluster0 {
+    label = "ANIMALS::ID"
+    subgraph cluster1 {
+    style="rounded,filled"
+    color=black
+    fillcolor=6
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    cat [label="{<counter> 1 | <key> 0 | { <left> NULL | pk:0 | <right> . }}"]
+    }
+
+    subgraph cluster2 {
+    style="rounded,filled"
+    color=black
+    fillcolor=6
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    dog [label="{<counter> 1 | <key> 1 | { <left> . | pk:1 | <right> . }}"]
+    }
+
+    subgraph cluster3 {
+    style="rounded,filled"
+    color=black
+    fillcolor=6
+    colorscheme=paired10
+    label=""
+
+    node[shape=record style="filled" color=black fillcolor=white]
+    horse [label="{<counter> 1 | <key> 2 | { <left> . | pk:2 | <right> . }}"]
+    hamster [label="{<counter> 1 | <key> 3 | { <left> . | pk:3 | <right> NULL }}"]
+    }
+
+    cat:right -> dog:left [dir=none constraint=false]
+    dog:right -> horse:left [dir=none constraint=false]
+
+
+    dog -> cat [ltail="cluster2", lhead="cluster1", dir=none, penwidth=3]
+    dog -> horse [ltail="cluster2", lhead="cluster3", dir=none, penwidth=3]
+
+
+    }
+}
