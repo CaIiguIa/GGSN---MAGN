@@ -37,7 +37,7 @@ class ASAGraph:
                 node = node.right_child()
 
             else:
-                n = node.middle_child()
+                node = node.middle_child()
 
     def insert(self, key: int | float | str):
         """
@@ -56,10 +56,9 @@ class ASAGraph:
             if node.is_leaf():
                 new_element = ASAElement(key)
                 self.insert_bl(new_element)
-                # while len(node.elements) >= 2:
-                    # if node.has_parent():
-                        # split()
-                    # else:
+                while len(node.elements) >= 2:
+                    self.split_node(node)
+                    node = node.parent
 
             elif key < node.left_element().key:
                 node = node.left_child()
@@ -69,7 +68,6 @@ class ASAGraph:
 
             else:
                 node = node.middle_child()
-
 
     def insert_bl(self, new_element: ASAElement):
         """
@@ -122,3 +120,23 @@ class ASAGraph:
         while current_element:
             print(current_element.key, end=" ")
             current_element = current_element.bl_next
+
+    def split_node(self, node: ASANode):
+        if len(node.elements) != 3:
+            raise ValueError("The node does not have 3 elements thus it cannot be split")
+
+        # remove middle element from node
+        middle_element = node.elements[1]
+        node.remove_element(middle_element)
+
+        if node.parent is None:
+            new_parent = ASANode()
+            new_parent.insert_element(middle_element)
+
+            new_parent.insert_child(node)
+            node.parent = new_parent
+
+        else:
+            node.parent.insert_element(middle_element)
+
+        node.split_into_two()
