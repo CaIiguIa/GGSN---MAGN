@@ -1,6 +1,6 @@
 from typing import List
 
-from src.asa.ASAElement import ASAElement
+from src.magn.asa.ASAElement import ASAElement
 
 
 class ASANode:

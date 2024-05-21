@@ -1,6 +1,5 @@
-from src.asa.ASAElement import ASAElement
-from src.asa.ASANode import ASANode
-from typing import Self
+from src.magn.asa.ASAElement import ASAElement
+from src.magn.asa.ASANode import ASANode
 
 
 class ASAGraph:
