@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from magn.mang_graph import MAGNGraph
+from magn.mang import MAGNGraph
 
 
 @dataclass(slots=True)
