@@ -1,0 +1,33 @@
+python-implementation = "CPython"
+
+[project]
+name = "magn"
+version = "1.0.0.0"
+authors = [
+    { name="Szymon Jurecki", email="..." },
+    { name="Dominik Breksa", email="dominikbreksa@gmail.com" },
+]
+description = "Small Libreary for MAGNs implementation."
+readme = { file = "README.md", content-type = "text/markdown" }
+
+requires-python = ">=3.11.0"
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dynamic = [
+    "dependencies",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/CaIiguIa/GGSN---MAGN"
+Issues = "https://github.com/CaIiguIa/GGSN---MAGN/issues"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
