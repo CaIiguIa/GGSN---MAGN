@@ -4,7 +4,7 @@ python-implementation = "CPython"
 name = "magn"
 version = "1.0.0.0"
 authors = [
-    { name="Szymon Jurecki", email="..." },
+    { name="Szymon Jurecki", email="sdjurecki@gmail.com" },
     { name="Dominik Breksa", email="dominikbreksa@gmail.com" },
 ]
 description = "Small Libreary for MAGNs implementation."
