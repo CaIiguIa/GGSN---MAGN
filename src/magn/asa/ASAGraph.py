@@ -60,8 +60,7 @@ class ASAGraph:
                 self.insert_bl(new_element)
                 node.insert_element(new_element)
                 while node is not None and len(node.elements) > 2:
-                    self.split_node(node)
-                    node = node.parent
+                    node = self.split_node(node)
                 return
 
             elif key < node.left_element().key:
@@ -173,7 +172,7 @@ class ASAGraph:
         else:
             node.parent.insert_element(middle_element)
 
-        node.split_into_two()
+        return node.split_into_two()
 
     def plot_graph(self):
         """

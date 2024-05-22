@@ -148,8 +148,6 @@ class ASANode:
         Inserts child node to the node in the correct order
         """
         n_children = len(self.children)
-        if n_children == 3:
-            raise ValueError("The node cannot have more than 3 children")
 
         if n_children == 0:
             self.children.append(node)
@@ -203,7 +201,7 @@ class ASANode:
         left_node.parent.insert_child(left_node)
         right_node.parent.insert_child(right_node)
 
-        return left_node, right_node
+        return left_node.parent
 
     def id_keys(self):
         return ", ".join(map(str, self.keys()))
