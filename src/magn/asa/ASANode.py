@@ -1,5 +1,7 @@
 from typing import List
 
+import networkx as nx
+
 from src.magn.asa.ASAElement import ASAElement
 
 
@@ -54,7 +56,7 @@ class ASANode:
         """
         Returns keys in the node in sorted order. It does not return keys of the children nodes
         """
-        return [element.key for element in self.elements].sort()
+        return sorted([element.key for element in self.elements])
 
     def left_child(self):
         """
@@ -187,3 +189,19 @@ class ASANode:
         self.children = []
 
         return left_node, right_node
+
+    def id_keys(self):
+        return " ".join(map(str, self.keys()))
+
+    def plot_graph_node(self, graph: nx.Graph):
+        """
+        Plot the ASA graph node. Does not plot the children nodes.
+        """
+        # graph.add_node(self.keys())
+        if self.parent:
+            graph.add_edge(self.parent.keys(), self.keys())
+        else:
+            graph.add_node(self.keys())
+
+        for child in self.children:
+            child.plot_graph_node(graph)

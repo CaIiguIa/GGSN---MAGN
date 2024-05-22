@@ -1,3 +1,5 @@
+import networkx as nx
+
 from src.magn.asa.ASAElement import ASAElement
 from src.magn.asa.ASANode import ASANode
 
@@ -57,7 +59,8 @@ class ASAGraph:
                 new_element = ASAElement(key)
                 self.insert_bl(new_element)
                 node.insert_element(new_element)
-                while len(node.elements) >= 2:
+                while len(node.elements) > 2:
+                    print(len(node.elements))
                     self.split_node(node)
                     node = node.parent
 
@@ -170,3 +173,11 @@ class ASAGraph:
             node.parent.insert_element(middle_element)
 
         node.split_into_two()
+
+    def plot_graph(self):
+        """
+        Plot the ASA graph
+        """
+        graph = nx.Graph()
+        self.root.plot_graph_node(graph)
+        nx.draw(graph, with_labels=True)
