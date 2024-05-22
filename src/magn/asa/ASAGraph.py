@@ -164,6 +164,7 @@ class ASAGraph:
 
         if node.parent is None:
             new_parent = ASANode()
+            self.root = new_parent
             new_parent.insert_element(middle_element)
 
             new_parent.insert_child(node)
@@ -173,7 +174,6 @@ class ASAGraph:
             node.parent.insert_element(middle_element)
 
         node.split_into_two()
-        #TODO: change root if needed
 
     def plot_graph(self):
         """

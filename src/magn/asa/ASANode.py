@@ -53,6 +53,15 @@ class ASANode:
 
         return self.parent is not None
 
+    def is_root(self) -> bool:
+        """
+        Check if the node is a root node
+
+        :return: True if the node is a root node, False otherwise
+        """
+
+        return self.parent is None
+
     def keys(self):
         """
         Returns keys in the node in sorted order. It does not return keys of the children nodes
@@ -151,6 +160,8 @@ class ASANode:
                 self.children.insert(n_children, node)
                 return
 
+        self.children.append(node)
+
     def remove_element(self, element_to_remove: ASAElement):
         self.elements = [element for element in self.elements if element.key != element_to_remove.key]
 
@@ -188,6 +199,9 @@ class ASANode:
 
         self.parent = None
         self.children = []
+
+        left_node.parent.insert_child(left_node)
+        right_node.parent.insert_child(right_node)
 
         return left_node, right_node
 
