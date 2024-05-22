@@ -51,7 +51,7 @@ class ASAGraph:
         node = self.root
         while True:
             element = node.search(key)
-            if element:
+            if element is not None:
                 element.key_duplicates += 1
                 return
 
@@ -59,10 +59,10 @@ class ASAGraph:
                 new_element = ASAElement(key)
                 self.insert_bl(new_element)
                 node.insert_element(new_element)
-                while len(node.elements) > 2:
-                    print(len(node.elements))
+                while node is not None and len(node.elements) > 2:
                     self.split_node(node)
                     node = node.parent
+                return
 
             elif key < node.left_element().key:
                 node = node.left_child()
@@ -76,12 +76,12 @@ class ASAGraph:
     def insert_bl(self, new_element: ASAElement):
         """
         Insert an element into the bidirectional linked list
+        If the tree is empty, the element is not inserted as there is no need to update the pointers and their order
 
         :param new_element: the element to insert
         """
 
         if not self.root.elements:
-            self.root.elements.append(new_element)
             return
 
         current_element = self.leftmost_element()
@@ -173,11 +173,12 @@ class ASAGraph:
             node.parent.insert_element(middle_element)
 
         node.split_into_two()
+        #TODO: change root if needed
 
     def plot_graph(self):
         """
         Plot the ASA graph
         """
-        graph = nx.Graph()
-        self.root.plot_graph_node(graph)
+        graph = nx.DiGraph()
+        self.root.plot_graph_node(graph, depth=0)
         nx.draw(graph, with_labels=True)

@@ -1,6 +1,7 @@
 from typing import List
 
 import networkx as nx
+import matplotlib.pyplot as plt
 
 from src.magn.asa.ASAElement import ASAElement
 
@@ -191,17 +192,21 @@ class ASANode:
         return left_node, right_node
 
     def id_keys(self):
-        return " ".join(map(str, self.keys()))
+        return ", ".join(map(str, self.keys()))
 
-    def plot_graph_node(self, graph: nx.Graph):
+    def get_node_name(self, node: 'ASANode', depth: int):
+        if depth == 0:
+            return f"Root [{node.id_keys()}]"
+        return f"C{depth} [{node.id_keys()}]"
+
+    def plot_graph_node(self, graph: nx.Graph, depth):
         """
         Plot the ASA graph node. Does not plot the children nodes.
         """
-        # graph.add_node(self.keys())
         if self.parent:
-            graph.add_edge(self.parent.keys(), self.keys())
+            graph.add_edge(self.get_node_name(self.parent, depth - 1), self.get_node_name(self, depth))
         else:
-            graph.add_node(self.keys())
+            graph.add_node(self.get_node_name(self, depth))
 
         for child in self.children:
-            child.plot_graph_node(graph)
+            child.plot_graph_node(graph, depth + 1)
