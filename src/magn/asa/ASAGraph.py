@@ -56,6 +56,7 @@ class ASAGraph:
             if node.is_leaf():
                 new_element = ASAElement(key)
                 self.insert_bl(new_element)
+                node.insert_element(new_element)
                 while len(node.elements) >= 2:
                     self.split_node(node)
                     node = node.parent
@@ -99,7 +100,7 @@ class ASAGraph:
 
     def leftmost_element(self) -> ASAElement:
         """
-        Get the leftmost element in the ASA graph
+        Get the leftmost element in the ASA graph. It is the element with the smallest key
 
         :return: the leftmost element in the ASA graph
         """
@@ -110,9 +111,34 @@ class ASAGraph:
 
         return current_node.left_element()
 
+    def rightmost_element(self) -> ASAElement:
+        """
+        Get the rightmost element in the ASA graph. It is the element with the biggest key
+
+        :return: the rightmost element in the ASA graph
+        """
+
+        current_node = self.root
+        while not current_node.is_leaf():
+            current_node = current_node.right_child()
+
+        return current_node.right_element()
+
+    def min(self):
+        """
+        Returns element with minimal value in the tree
+        """
+        return self.leftmost_element()
+
+    def max(self):
+        """
+        Returns element with maximal value in the tree
+        """
+        return self.rightmost_element()
+
     def print_bl(self):
         """
-        Print the bidirectional linked list
+        Print the bidirectional linked list. It prints the elements in the tree in ascending order
         """
 
         current_element = self.leftmost_element()
@@ -122,6 +148,10 @@ class ASAGraph:
             current_element = current_element.bl_next
 
     def split_node(self, node: ASANode):
+        """
+        Split the node if it has more 3 elements
+        Throws an error if the node does not have 3 elements
+        """
         if len(node.elements) != 3:
             raise ValueError("The node does not have 3 elements thus it cannot be split")
 

@@ -21,7 +21,7 @@ class ASANode:
 
     def search(self, key):
         """
-        Search for an element in the node with the given key
+        Search for an element in the node with the given key. It does not search in the children nodes
 
         :param key: the key of the element to search for
         :return: the element with the given key if it exists, None otherwise
@@ -51,6 +51,9 @@ class ASANode:
         return self.parent is not None
 
     def keys(self):
+        """
+        Returns keys in the node in sorted order. It does not return keys of the children nodes
+        """
         return [element.key for element in self.elements].sort()
 
     def left_child(self):
@@ -81,6 +84,8 @@ class ASANode:
         """
         Get the middle child of the node. Creates one if it does not exist and parameter "create" is True
 
+        :param create: if True, creates a middle child if it does not exist
+
         :return: the middle child of the node
         """
 
@@ -95,7 +100,7 @@ class ASANode:
 
     def left_element(self):
         """
-        Get the leftmost element of the node
+        Get the leftmost element of the node. It is the element with the smallest key in the node
 
         :return: the leftmost element of the node
         """
@@ -107,7 +112,7 @@ class ASANode:
 
     def right_element(self):
         """
-        Get the rightmost element of the node
+        Get the rightmost element of the node. It is the element with the biggest key in the node
 
         :return: the rightmost element of the node
         """
@@ -118,11 +123,30 @@ class ASANode:
         return None
 
     def insert_element(self, new_element: ASAElement):
+        """
+        Insert a new element to the node. The element is inserted in the correct (ascending) order
+
+        :param new_element: the element to insert
+        """
         self.elements.append(new_element)
         self.elements.sort(key=lambda element: element.key)
 
     def insert_child(self, node: 'ASANode'):
-        pass
+        """
+        Inserts child node to the node in the correct order
+        """
+        n_children = len(self.children)
+        if n_children == 3:
+            raise ValueError("The node cannot have more than 3 children")
+
+        if n_children == 0:
+            self.children.append(node)
+            return
+
+        for n_children in range(n_children):
+            if self.children[n_children].keys() > node.keys():
+                self.children.insert(n_children, node)
+                return
 
     def remove_element(self, element_to_remove: ASAElement):
         self.elements = [element for element in self.elements if element.key != element_to_remove.key]
@@ -132,12 +156,12 @@ class ASANode:
 
     def split_into_two(self):
         """
-        Splits the node into two. The node has to have exactly 2 elements to work
+        Splits the node into two. The node needs to have exactly 2 elements to be split
 
         :return: created nodes
         """
         if len(self.elements) != 2:
-            raise ValueError("Node has to have 2 elements to be split")
+            raise ValueError("Node needs to have 2 elements to be split")
 
         left_node = ASANode(self.parent)
         left_node.insert_element(self.elements[0])
@@ -146,6 +170,20 @@ class ASANode:
         right_node.insert_element(self.elements[1])
 
         self.parent.remove_child(self)
-        # TODO: take node's children and give them to left_node and right_node: split children with formula:
-        # self.children[0: int((len(self.children)+1)/2)]
-        self
+
+        children_split_point = int((len(self.children) + 1) / 2)
+        left_children = self.children[0: children_split_point]
+        right_children = self.children[children_split_point:]
+
+        for child in left_children:
+            left_node.insert_child(child)
+            child.parent = left_node
+
+        for child in right_children:
+            right_node.insert_child(child)
+            child.parent = right_node
+
+        self.parent = None
+        self.children = []
+
+        return left_node, right_node
