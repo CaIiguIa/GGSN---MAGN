@@ -5,7 +5,7 @@ from typing import Tuple, final
 
 from magn.asa.ASAGraph import ASAGraph
 from magn.database.converters.interface import Converter
-from magn.mang import MAGNGraph
+from magn.magn import MAGNGraph
 
 
 @final
@@ -18,11 +18,15 @@ class SQLite3Converter(Converter):
 
     def convert(self) -> MAGNGraph:
         graph = MAGNGraph()
+        tables = self._get_all_table_names()
 
-        with sqlite3.connect(self.file) as connection:
-            pass
+        for table in tables:
+            columns = self._get_columns(table)
 
-    def get_all_table_names(self) -> Tuple[str, ...]:
+
+        raise NotImplementedError()
+
+    def _get_all_table_names(self) -> Tuple[str, ...]:
         with sqlite3.connect(self.file) as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -39,5 +43,14 @@ class SQLite3Converter(Converter):
 
         return table_names
 
-    def fetch_individual_table(self, table_name: str) -> ASAGraph:
-        pass
+    def _get_columns(self, table: str) -> Tuple[str, ...]:
+        with sqlite3.connect(self.file) as connection:
+            cursor = connection.cursor()
+            cursor.execute(f"""
+                PRAGMA
+                    table_info({table});
+            """)
+            columns = cursor.fetchall()
+            column_names = tuple(column[1] for column in columns)
+
+        return column_names

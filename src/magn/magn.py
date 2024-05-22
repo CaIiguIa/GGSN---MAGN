@@ -16,7 +16,7 @@ class MAGNGraph:
         :param file:
         :return:
         """
-        pass
+        raise NotImplementedError()
 
     @classmethod
     def from_asa(cls, asa_graphs: List[ASAGraph]) -> Self:
@@ -26,4 +26,4 @@ class MAGNGraph:
         :param asa_graphs:
         :return:
         """
-        pass
+        raise NotImplementedError()
