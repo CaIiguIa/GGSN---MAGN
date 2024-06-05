@@ -3,7 +3,11 @@ from pathlib import Path
 from typing import Self, List, Any, Container, Tuple
 from collections.abc import MutableMapping
 
+import pandas as pd
+
 from magn.asa.ASAGraph import ASAGraph
+from magn.database.converters.sqlite3 import SQLite3Converter
+from magn.database.sorting.topological_sort import TopologicalSorter
 
 
 @dataclass(slots=True)
@@ -22,7 +26,15 @@ class MAGNGraph[T](MutableMapping[Tuple[str, str], Any], Container[Tuple[str, st
         :param file:
         :return:
         """
+        converter = SQLite3Converter(file)
+        database = converter.convert()
+        sorter = TopologicalSorter()
+
+        for table_id in sorter.sort(database.graph):
+            table: pd.DataFrame = database.tables[table_id]
+
         raise NotImplementedError()
+
 
     @classmethod
     def from_asa(cls, asa_graphs: List[ASAGraph]) -> Self:

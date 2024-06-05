@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from magn.magn import MAGNGraph
+from magn.database.database import Database
 
 
 @dataclass(slots=True)
 class Converter(ABC):
 
     @abstractmethod
-    def convert(self) -> MAGNGraph:
+    def convert(self) -> Database:
         pass

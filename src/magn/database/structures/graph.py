@@ -1,10 +1,10 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import MutableMapping, Container, Dict, Sized, Iterator, Tuple
+from typing import MutableMapping, Container, Dict, Sized, Iterator, Tuple, Set
 
 
 @dataclass(slots=True)
-class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
+class Graph[T](MutableMapping[T, T], Container[T], Sized):
     """
     A Graph data structure that implements MutableMapping, Container, and Sized interfaces.
 
@@ -26,8 +26,8 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
         __contains__(item): Checks if the vertex 'item' is in the graph.
     """
 
-    _graph: Dict[K, set[T]] = field(default_factory=lambda: defaultdict(set), init=False)
-    _vertex_to_id: Dict[K, int] = field(default_factory=dict, init=False)
+    _graph: Dict[T, Set[T]] = field(default_factory=lambda: defaultdict(set), init=False)
+    _vertex_to_id: Dict[T, int] = field(default_factory=dict, init=False)
     _counter: int = 0
 
     def __post_init__(self) -> None:
@@ -38,7 +38,7 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
         """
         pass
 
-    def __setitem__(self, __key: K, __value: T) -> None:
+    def __setitem__(self, __key: T, __value: T) -> None:
         """
         Add an edge from '__key' to '__value' in the graph.
 
@@ -56,7 +56,7 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
             self._vertex_to_id[__value] = self._counter
             self._counter += 1
 
-    def __delitem__(self, __key: K) -> None:
+    def __delitem__(self, __key: T) -> None:
         """
         Remove the vertex '__key' and all its edges from the graph.
 
@@ -66,7 +66,7 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
         for vertex in self._graph:
             self._graph[vertex].discard(__key)
 
-    def __getitem__(self, __key: K) -> T:
+    def __getitem__(self, __key: T) -> Set[T]:
         """
         Return the vertices adjacent to the vertex '__key'.
 
@@ -75,7 +75,7 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
         """
         return self._graph[__key]
 
-    def __iter__(self) -> Iterator[K]:
+    def __iter__(self) -> Iterator[T]:
         """
         Return an iterator over the vertices in the graph.
 
@@ -99,7 +99,7 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
 
         return vertex_length, edges_length
 
-    def __contains__(self, item: K) -> bool:
+    def __contains__(self, item: T) -> bool:
         """
         Check if the vertex 'item' is in the graph.
 
@@ -108,14 +108,15 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
         """
         return item in self._graph
 
-    def convert_to_int(self, key: K) -> int:
+    def convert_to_int(self, key: T) -> int:
         """
         Convert the key to an integer and return it.
 
+        :exception: KeyError: If the key is not found in the graph.
         :param key: The key to be converted.
         :return: The integer representation of the key.
         """
         if key not in self._vertex_to_id:
-            self._vertex_to_id[key] = len(self._vertex_to_id)
+            raise KeyError(f"Key {key} not found in the graph.")
 
         return self._vertex_to_id[key]
