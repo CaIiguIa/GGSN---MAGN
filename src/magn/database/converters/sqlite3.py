@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple, final
 
+import pandas as pd
+
 from magn.database.converters.interface import Converter
 from magn.magn import MAGNGraph
 
@@ -15,7 +17,7 @@ class SQLite3Converter(Converter):
     def __post_init__(self) -> None:
         pass
 
-    def convert(self) -> MAGNGraph:
+    def convert(self) -> pd.DataFrame:
         graph = MAGNGraph()
         tables = self._get_all_table_names()
 

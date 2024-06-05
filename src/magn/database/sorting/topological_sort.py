@@ -15,7 +15,8 @@ class TopologicalSorter:
 
     Methods:
         sort(graph: Graph) -> Generator:
-            Performs topological sorting on the given graph and returns a generator that yields the vertices in topological order.
+            Performs topological sorting on the given graph and returns a generator that yields the vertices in
+            topological order.
 
         _dfs(graph: Graph, vertex: int, visited: List[bool], stack: deque) -> None:
             A helper method that performs Depth-First Search on the graph from the given vertex.
@@ -26,7 +27,8 @@ class TopologicalSorter:
         Perform topological sorting on the given graph.
 
         This method uses Depth-First Search (DFS) to visit each vertex in the graph.
-        It maintains a stack of vertices, where each vertex is pushed onto the stack after all of its neighbours have been visited.
+        It maintains a stack of vertices, where each vertex is pushed onto the stack after all of its neighbours have
+        been visited.
 
         :param graph: The graph to be sorted.
         :return: A generator that yields the vertices in topological order.
@@ -37,7 +39,7 @@ class TopologicalSorter:
         visited: List[bool] = [False] * vertex_length
 
         for vertex in graph:
-            if not visited[vertex]:
+            if not visited[graph.convert_to_int(vertex)]:
                 self._dfs(graph, vertex, visited, stack)
 
         for element in stack:
@@ -47,19 +49,21 @@ class TopologicalSorter:
         """
         Perform Depth-First Search on the graph from the given vertex.
 
-        This is a helper method used by the sort method. It visits the given vertex and all vertices reachable from it
-        that haven't yet been visited. It maintains a stack of vertices, where each vertex is pushed onto the stack
+        This is a helper method used by the sort method.
+        It visits the given vertex and all vertices are reachable from it that haven't yet been visited.
+        It maintains a stack of vertices, where each vertex is pushed onto the stack
         after all of its neighbours have been visited.
 
         :param graph: The graph to be traversed.
         :param vertex: The starting vertex for the DFS.
         :param visited: A list that keeps track of which vertices have been visited.
-        :param stack: A stack of vertices, where each vertex is pushed onto the stack after all of its neighbours have been visited.
+        :param stack: A stack of vertices, where each vertex is pushed onto the stack after all of its neighbours have
+        been visited.
         """
         visited[vertex] = True
 
         for neighbour in graph[vertex]:
-            if not visited[neighbour]:
+            if not visited[graph.convert_to_int(neighbour)]:
                 self._dfs(graph, neighbour, visited, stack)
 
         stack.appendleft(vertex)

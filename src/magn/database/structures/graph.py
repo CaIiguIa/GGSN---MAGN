@@ -1,6 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import MutableMapping, Container, Dict, List, Tuple, Sized, Iterator
+from typing import MutableMapping, Container, Dict, Sized, Iterator, Tuple
 
 
 @dataclass(slots=True)
@@ -27,6 +27,8 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
     """
 
     _graph: Dict[K, set[T]] = field(default_factory=lambda: defaultdict(set), init=False)
+    _vertex_to_id: Dict[K, int] = field(default_factory=dict, init=False)
+    _counter: int = 0
 
     def __post_init__(self) -> None:
         """
@@ -46,13 +48,23 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
         self._graph[__key].add(__value)
         self._graph[__value] = set()
 
+        if __key not in self._vertex_to_id:
+            self._vertex_to_id[__key] = self._counter
+            self._counter += 1
+
+        if __value not in self._vertex_to_id:
+            self._vertex_to_id[__value] = self._counter
+            self._counter += 1
+
     def __delitem__(self, __key: K) -> None:
         """
         Remove the vertex '__key' and all its edges from the graph.
 
         :param __key: The vertex to be removed.
         """
-        pass
+        del self._graph[__key]
+        for vertex in self._graph:
+            self._graph[vertex].discard(__key)
 
     def __getitem__(self, __key: K) -> T:
         """
@@ -71,7 +83,7 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
         """
         return iter(self._graph)
 
-    def __len__(self) -> Sized:
+    def __len__(self) -> Tuple[int, int]:
         """
         Calculate and return the number of vertices and edges in the graph.
 
@@ -95,3 +107,15 @@ class Graph[K, T](MutableMapping[K, T], Container[K], Sized):
         :return: True if the vertex is in the graph, False otherwise.
         """
         return item in self._graph
+
+    def convert_to_int(self, key: K) -> int:
+        """
+        Convert the key to an integer and return it.
+
+        :param key: The key to be converted.
+        :return: The integer representation of the key.
+        """
+        if key not in self._vertex_to_id:
+            self._vertex_to_id[key] = len(self._vertex_to_id)
+
+        return self._vertex_to_id[key]
