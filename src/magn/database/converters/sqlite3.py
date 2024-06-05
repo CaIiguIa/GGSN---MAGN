@@ -23,7 +23,6 @@ class SQLite3Converter(Converter):
         for table in tables:
             columns = self._get_columns(table)
 
-
         raise NotImplementedError()
 
     def _get_all_table_names(self) -> Tuple[str, ...]:
