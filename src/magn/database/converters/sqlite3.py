@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple, final
 
-from magn.asa.ASAGraph import ASAGraph
 from magn.database.converters.interface import Converter
 from magn.magn import MAGNGraph
 
