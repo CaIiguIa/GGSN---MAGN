@@ -61,7 +61,7 @@ class ASAGraph:
                 node.insert_element(new_element)
                 while node is not None and len(node.elements) > 2:
                     node = self.split_node(node)
-                return
+                break
 
             elif key < node.left_element().key:
                 node = node.left_child()
@@ -71,6 +71,8 @@ class ASAGraph:
 
             else:
                 node = node.middle_child()
+
+        self.bl_fix_weights()
 
     def insert_bl(self, new_element: ASAElement):
         """
@@ -146,7 +148,9 @@ class ASAGraph:
         current_element = self.leftmost_element()
 
         while current_element:
-            print(current_element.key, end=" ")
+            print(f"({current_element.key})", end="")
+            if current_element.bl_next:
+                print(f" --{current_element.bl_next_weight}-- ", end="")
             current_element = current_element.bl_next
 
     def split_node(self, node: ASANode):
@@ -181,3 +185,17 @@ class ASAGraph:
         graph = nx.DiGraph()
         self.root.plot_graph_node(graph, depth=0)
         nx.draw(graph, with_labels=True)
+
+    def bl_fix_weights(self):
+        """
+        Fix the weights of the bidirectional linked list
+        """
+        value_range = self.rightmost_element().key - self.leftmost_element().key
+
+        current_element = self.leftmost_element()
+        while current_element.bl_next:
+            current_element.bl_next_weight = 1.0 - (current_element.bl_next.key - current_element.key) / value_range
+            current_element = current_element.bl_next
+
+            if current_element.bl_prev is not None:
+                current_element.bl_prev_weight = current_element.bl_prev.bl_next_weight
