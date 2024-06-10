@@ -144,11 +144,11 @@ class ASAGraph:
         """
         Print the bidirectional linked list. It prints the elements in the tree in ascending order
         """
-
+        print("(value|duplicates) --weight-- (value|duplicates) --weight-- ...")
         current_element = self.leftmost_element()
 
         while current_element:
-            print(f"({current_element.key})", end="")
+            print(f"({current_element.key}|{current_element.key_duplicates})", end="")
             if current_element.bl_next:
                 print(f" --{current_element.bl_next_weight}-- ", end="")
             current_element = current_element.bl_next
