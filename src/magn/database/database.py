@@ -49,4 +49,4 @@ class Database:
         dependencies = self.get_dependency_graph()
         sorter = TopologicalSorter()
 
-        return list(sorter.sort(dependencies))
+        return list(reversed(list(sorter.sort(dependencies))))

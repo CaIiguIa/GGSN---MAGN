@@ -1,7 +1,7 @@
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, final, List, Dict, Sequence
+from typing import Tuple, final, List, Dict
 
 import pandas as pd
 
