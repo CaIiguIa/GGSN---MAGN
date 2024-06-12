@@ -1,7 +1,7 @@
 import networkx as nx
 
-from src.magn.asa.ASAElement import ASAElement
-from src.magn.asa.ASANode import ASANode
+from src.magn.asa.asa_element import ASAElement
+from src.magn.asa.asa_node import ASANode
 
 
 class ASAGraph:
@@ -10,10 +10,12 @@ class ASAGraph:
 
     Attributes:
     root:   the root node of the ASA graph
+    sensor: the sensor that is associated with the ASA graph
     """
 
     def __init__(self):
         self.root: ASANode = ASANode()
+        self.sensor = None
 
     def search(self, key: int | float | str) -> ASANode | None:
         """

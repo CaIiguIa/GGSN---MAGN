@@ -1,9 +1,8 @@
 from typing import List
 
 import networkx as nx
-import matplotlib.pyplot as plt
 
-from src.magn.asa.ASAElement import ASAElement
+from src.magn.asa.asa_element import ASAElement
 
 
 class ASANode:

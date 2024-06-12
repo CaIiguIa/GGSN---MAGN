@@ -1,12 +1,16 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self, List
+from typing import Self, List, Dict
 
-from magn.asa.ASAGraph import ASAGraph
+from magn.asa.asa_graph import ASAGraph
+from magn.magn_object_node import MAGNObjectNode
 
 
 @dataclass(slots=True)
 class MAGNGraph:
+    def __init__(self):
+        self.asa_graphs: List[ASAGraph] = []
+        self.objects: Dict[str, List[MAGNObjectNode]] = {}
 
     @classmethod
     def from_sqlite3(cls, file: Path) -> Self:

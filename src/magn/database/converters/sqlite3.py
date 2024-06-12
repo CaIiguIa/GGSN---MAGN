@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple, final
 
-from magn.asa.ASAGraph import ASAGraph
+from magn.asa.asa_graph import ASAGraph
 from magn.database.converters.interface import Converter
-from magn.mang import MAGNGraph
+from magn.magn import MAGNGraph
 
 
 @final
