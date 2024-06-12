@@ -1,3 +1,8 @@
+from typing import List
+
+from magn.asa.asa_element import ASAElement
+
+
 class MAGNObjectNode:
     """
     A class representation of a node (object) in the MAGN graph.
@@ -9,3 +14,4 @@ class MAGNObjectNode:
     def __init__(self, clazz):
         self.clazz: str = clazz
         self.duplicates: int = 1
+        self.values: List[ASAElement] = []

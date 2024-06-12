@@ -13,9 +13,10 @@ class ASAGraph:
     sensor: the sensor that is associated with the ASA graph
     """
 
-    def __init__(self):
+    def __init__(self, name: str):
         self.root: ASANode = ASANode()
-        self.sensor = None
+        self.name = name
+        # self.sensor = None
 
     def search(self, key: int | float | str) -> ASANode | None:
         """
@@ -201,3 +202,7 @@ class ASAGraph:
 
             if current_element.bl_prev is not None:
                 current_element.bl_prev_weight = current_element.bl_prev.bl_next_weight
+
+    def sensor(self, value):
+        if self.search(value) is None:
+            raise ValueError(f"Value: {value} not found in the ASA Graph")
