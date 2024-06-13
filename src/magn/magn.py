@@ -1,15 +1,22 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self, List, Dict
-
 from pandas import Series
 
 from magn.asa.asa_graph import ASAGraph
 from magn.magn_object_node import MAGNObjectNode
+from magn.database.database import Database
+from magn.database.topological_sort import TopologicalSorter
 
 
 @dataclass(slots=True)
 class MAGNGraph:
+    """
+    TODO: Add docstring
+    TODO: Add generics
+    TODO: Change Any to proper ASAGraph[T] type
+    """
+
     def __init__(self):
         """
         Initialize the MAGN graph.
@@ -24,22 +31,29 @@ class MAGNGraph:
     @classmethod
     def from_sqlite3(cls, file: Path) -> Self:
         """
-        Substitute for the lack in ability to create many constructors in python.
+        Substitute for the lack in the ability to create many constructors in python.
 
         :param file:
         :return:
         """
-        pass
+        database = Database.from_sqlite3(file)
+
+        for table_name in database.sort():
+            table = database.tables[table_name]
+            for column in table.columns:
+                column_data = table[column]
+
+        raise NotImplementedError()
 
     @classmethod
     def from_asa(cls, asa_graphs: List[ASAGraph]) -> Self:
         """
-        Substitute for the lack in ability to create many constructors in python.
+        Substitute for the lack in the ability to create many constructors in python.
 
         :param asa_graphs:
         :return:
         """
-        pass
+        raise NotImplementedError()
 
     def fit(self, data_x: Series, data_y: Series, num_epochs: int, ):
         """

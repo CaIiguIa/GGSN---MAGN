@@ -7,8 +7,9 @@ def main() -> None:
     with open('./pyproject.toml', 'rb') as toml_file:
         project_data: dict = load(toml_file)
 
-    authors: str = ', '.join(map(lambda x: x['name'], project_data['project']['authors']))
-    emails: str = ', '.join(map(lambda x: x['email'], project_data['project']['authors']))
+    authors_data: dict = project_data['project']['authors']
+    authors: str = ', '.join(map(lambda x: x['name'], authors_data))
+    emails:  str = ', '.join(map(lambda x: x['email'], authors_data))
 
     setup(
         name=project_data['project']['name'],

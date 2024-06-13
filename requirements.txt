@@ -65,6 +65,7 @@ overrides==7.7.0
 packaging==24.0
 pandocfilters==1.5.1
 parso==0.8.4
+pandas==2.2.2
 pillow==10.3.0
 platformdirs==4.2.2
 prometheus_client==0.20.0
