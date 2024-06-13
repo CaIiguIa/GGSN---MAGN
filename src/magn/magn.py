@@ -75,6 +75,10 @@ class MAGNGraph:
 
                 self._update_priorities(activated_neurons, target_value, learning_rate)
 
+    def predict(self, data: pd.Series, target: str):
+        activated_neurons = list(map(lambda _asa: _asa.search(data[_asa.name]), self.asa_graphs))
+        return calculate_prediction(activated_neurons, target)
+
     def get_asa_by_name(self, name: str) -> ASAGraph:
         """
         Get an ASA graph by name.
@@ -139,3 +143,15 @@ class MAGNGraph:
             deltas.append(target_value - neuron.key)
 
         return deltas
+
+    def calculate_prediction(self, activated_neurons: List[ASAElement], target: str) -> str:
+        """
+        Calculate the prediction based on the activated neurons.
+
+        :param neurons: the activated neurons
+        :param target: the target
+        :return: the prediction
+        """
+        # go from activated_neurons to target feature (any value of target feature) with BFS
+        # on all found paths, calculate the sum of the (neuron_priority * connection_weight) on the path
+        # return the target value with the highest sum
