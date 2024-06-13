@@ -206,3 +206,14 @@ class ASAGraph:
     def sensor(self, value):
         if self.search(value) is None:
             raise ValueError(f"Value: {value} not found in the ASA Graph")
+
+    def get_elements(self):
+        """
+        Get all elements in the ASA graph
+        """
+        elements = []
+        current_element = self.leftmost_element()
+        while current_element:
+            elements.append(current_element)
+            current_element = current_element.bl_next
+        return elements

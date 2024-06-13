@@ -50,6 +50,7 @@ class MAGNGraph:
         """
         for epoch in range(num_epochs):
             for datum in data_x:  # for every row of data
+                asa_graphs = []
                 for name in datum.keys():  # activate sensors
                     asa = self.get_asa_by_name(name)
                     if asa is None:
@@ -57,6 +58,16 @@ class MAGNGraph:
                             f"ASA graph with name {name} not found, check your input data. Column names may be "
                             f"incorrect.")
                     asa.sensor(datum[name])
+                    asa_graphs.append(asa)
+
+                activated_neurons = map(lambda _asa: _asa.get_elements(), asa_graphs)
+                for neuron_i in activated_neurons:
+                    for neuron_j in activated_neurons:
+                        # TODO calculate delta
+                        pass
+
+
+
 
                 pass
 
