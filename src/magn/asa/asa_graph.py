@@ -191,8 +191,11 @@ class ASAGraph:
 
     def bl_fix_weights(self):
         """
-        Fix the weights of the bidirectional linked list
+        Fix the weights of the bidirectional linked list. Highly inefficient, but it works.
         """
+        if isinstance(self.leftmost_element().key, str):
+            return
+
         value_range = self.rightmost_element().key - self.leftmost_element().key
 
         current_element = self.leftmost_element()

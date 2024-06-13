@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self, List, Dict
-from pandas import Series
+
+import pandas as pd
 
 from magn.asa.asa_graph import ASAGraph
-from magn.magn_object_node import MAGNObjectNode
 from magn.database.database import Database
-from magn.database.topological_sort import TopologicalSorter
+from magn.magn_object_node import MAGNObjectNode
 
 
 @dataclass(slots=True)
@@ -55,37 +55,23 @@ class MAGNGraph:
         """
         raise NotImplementedError()
 
-    def fit(self, data_x: Series, data_y: Series, num_epochs: int, ):
-        """
-        Fit the MAGN graph to the data. It is assumed that
+    def fit(self, data: pd.DataFrame, num_epochs: int, learning_rate: float):
+        if 'Target' not in data.keys():
+            raise NameError("Data must have a target column.")
 
-        :param data_x: the data to fit the MAGN graph to
-        :param num_epochs: the number of epochs to train the MAGN graph
-        """
+        data_no_target = data.drop(['Target'], axis=1)
+        data_target = data['Target']
+        asa_graphs = [self.get_asa_by_name(name) for name in data_no_target.keys()]
+        target_asa_graph = self.get_asa_by_name(data_target.keys()[0])
+        neurons = list(map(lambda _asa: _asa.get_elements(), asa_graphs))
+
         for epoch in range(num_epochs):
-            for datum in data_x:  # for every row of data
-                asa_graphs = []
-                for name in datum.keys():  # activate sensors
-                    asa = self.get_asa_by_name(name)
-                    if asa is None:
-                        raise ValueError(
-                            f"ASA graph with name {name} not found, check your input data. Column names may be "
-                            f"incorrect.")
-                    asa.sensor(datum[name])
-                    asa_graphs.append(asa)
+            for idx, row in data_no_target.iterrows():
+                target_col = data_target[idx]
+                target_value = row[target_col]
+                row_no_target = row.drop([target_col])
 
-                activated_neurons = map(lambda _asa: _asa.get_elements(), asa_graphs)
-                for neuron_i in activated_neurons:
-                    for neuron_j in activated_neurons:
-                        # TODO calculate delta
-                        pass
-
-
-
-
-                pass
-
-    def get_asa_by_name(self, name: str) -> ASAGraph | None:
+    def get_asa_by_name(self, name: str) -> ASAGraph:
         """
         Get an ASA graph by name.
 
@@ -95,4 +81,7 @@ class MAGNGraph:
         for asa_graph in self.asa_graphs:
             if asa_graph.name == name:
                 return asa_graph
-        return None
+
+        raise ValueError(
+            f"ASA graph with name {name} not found, check your input data. Column names may be "
+            f"incorrect.")
