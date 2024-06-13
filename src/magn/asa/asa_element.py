@@ -12,6 +12,21 @@ class ASAElement:
     def __init__(self, key):
         self.key: int | float | str = key
         self.key_duplicates: int = 1
+        self.priority: float = 1.0
+
+        # Bidirectional linked list
         self.bl_prev: ASAElement | None = None
         self.bl_next: ASAElement | None = None
+        self.bl_prev_weight: float = 0.0
+        self.bl_next_weight: float = 0.0
+
+        # MAGN
         self.magn_object = []  # TODO: maybe change this to a set/list of MAGN objects IDs
+
+    def magn_weight(self):
+        """
+        Calculate the weight of the element in the MAGN graph.
+        :param self:
+        :return: float, the weight of the element in the MAGN graph
+        """
+        return 1.0 / self.key_duplicates
