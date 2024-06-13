@@ -4,6 +4,7 @@ from typing import Self, List, Dict
 
 import pandas as pd
 
+from magn.asa.asa_element import ASAElement
 from magn.asa.asa_graph import ASAGraph
 from magn.database.database import Database
 from magn.magn_object_node import MAGNObjectNode
@@ -70,6 +71,9 @@ class MAGNGraph:
                 target_col = data_target[idx]
                 target_value = row[target_col]
                 row_no_target = row.drop([target_col])
+                activated_neurons = list(map(lambda _asa: _asa.search(row_no_target[_asa.name]), asa_graphs))
+
+                self._update_priorities(activated_neurons, target_value, learning_rate)
 
     def get_asa_by_name(self, name: str) -> ASAGraph:
         """
@@ -85,3 +89,53 @@ class MAGNGraph:
         raise ValueError(
             f"ASA graph with name {name} not found, check your input data. Column names may be "
             f"incorrect.")
+
+    def _update_priorities(self, neurons: List[ASAElement], target_value: int | float | str, learning_rate: float):
+        """
+        Update the priorities of the neurons in the MAGN graph.
+
+        :param neurons: the neurons to update
+        :param target_value: the target value
+        :param learning_rate: the learning rate
+        """
+        if isinstance(target_value, str):
+            deltas = self._calc_delta_categorical(neurons, target_value)
+        else:
+            deltas = self._calc_delta_numerical(neurons, target_value)
+
+        for neuron, delta in zip(neurons, deltas):
+            if delta == 0.0:
+                neuron.priority *= (1 + learning_rate * neuron.key)
+            else:
+                neuron.priority *= (1 - learning_rate * delta * neuron.key)
+
+    def _calc_delta_categorical(self, neurons: List[ASAElement], target_value: str) -> List[float]:
+        """
+        Calculate the delta for a categorical neuron.
+
+        :param neurons: the neurons for which delta is calculated
+        :param target_value: the target value
+        :return: the deltas
+        """
+        deltas = []
+
+        for neuron in neurons:
+            delta = 0 if neuron.key == target_value else 1
+            deltas.append(delta)
+
+        return deltas
+
+    def _calc_delta_numerical(self, neurons: List[ASAElement], target_value: int | float) -> List[float]:
+        """
+        Calculate the delta for a numerical neuron.
+
+        :param neurons: the neurons for which delta is calculated
+        :param target_value: the target value
+        :return: the delta
+        """
+        deltas = []
+
+        for neuron in neurons:
+            deltas.append(target_value - neuron.key)
+
+        return deltas
