@@ -10,6 +10,9 @@ class MAGNObjectNode(AbstractNode):
 
     clazz:                  the class of the object. Table name in the database.
     duplicates:             integer that counts the number of duplicate objects. It is initially set to 1.
+    priority:               currently unused. The priority of the object. It is initially set to 1.0.
+    values:                 list that stores the values associated with the object.
+    objects:                list that stores the objects associated with the object.
     """
 
     def __init__(self, clazz):
