@@ -1,4 +1,10 @@
-class ASAElement:
+from typing import List
+
+from magn.abstract_node import AbstractNode
+from magn.magn_object_node import MAGNObjectNode
+
+
+class ASAElement(AbstractNode):
     """
     A class representation of an element in ASA graph. An Element is a part of a node in the ASA graph.
 
@@ -9,8 +15,9 @@ class ASAElement:
     magn_object:            list that stores the MAGN graph objects associated with the node.
     """
 
-    def __init__(self, key):
+    def __init__(self, key: int | float | str, feature: str):
         self.key: int | float | str = key
+        self.feature: str = feature
         self.key_duplicates: int = 1
         self.priority: float = 1.0
 
@@ -21,12 +28,15 @@ class ASAElement:
         self.bl_next_weight: float = 0.0
 
         # MAGN
-        self.magn_object = []  # TODO: maybe change this to a set/list of MAGN objects IDs
+        self.magn_objects: List[MAGNObjectNode] = []  # List of MAGN objects
 
     def magn_weight(self):
         """
-        Calculate the weight of the element in the MAGN graph.
+        Calculate the weight of the connection between this element and MAGN object.
         :param self:
-        :return: float, the weight of the element in the MAGN graph
+        :return: float, the weight of the connection between this element and MAGN object
         """
         return 1.0 / self.key_duplicates
+
+    def neighbors(self) -> List[AbstractNode]:
+        return self.magn_objects
