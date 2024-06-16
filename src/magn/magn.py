@@ -1,3 +1,5 @@
+"""MAGN graph module."""
+
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
@@ -57,16 +59,6 @@ class MAGNGraph:
             print(f"Table {table_name} processed.")
 
         return magn
-
-    @classmethod
-    def from_asa(cls, asa_graphs: List[ASAGraph]) -> Self:
-        """
-        Substitute for the lack in the ability to create many constructors in python.
-
-        :param asa_graphs:
-        :return:
-        """
-        raise NotImplementedError()
 
     def fit(self, data: pd.DataFrame, num_epochs: int, learning_rate: float):
         if 'Target' not in data.keys():
@@ -182,7 +174,7 @@ class MAGNGraph:
         """
         Update the priorities of the neurons in the MAGN graph.
 
-        :param neurons: the neurons to update
+        :param neurons: Neurons to update
         :param target_value: the target value
         :param learning_rate: the learning rate
         """

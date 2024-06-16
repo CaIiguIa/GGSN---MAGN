@@ -1,3 +1,5 @@
+"""Contains the Keys class, which represents a set of keys for a table."""
+
 from dataclasses import dataclass
 from typing import final, List, Dict, Tuple
 

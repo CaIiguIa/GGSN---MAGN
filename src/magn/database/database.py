@@ -1,3 +1,5 @@
+"""Holds the Database class, which is a container for the data and keys of the database tables."""
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import final, Sequence, Self, Dict
@@ -49,4 +51,4 @@ class Database:
         dependencies = self.get_dependency_graph()
         sorter = TopologicalSorter()
 
-        return list(reversed(list(sorter.sort(dependencies))))
+        return list(sorter.sort(dependencies))

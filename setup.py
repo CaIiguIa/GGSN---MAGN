@@ -1,9 +1,12 @@
+"""Install the package using the setup.py file."""
+
 from tomllib import load
 
 from setuptools import setup, find_packages
 
 
 def main() -> None:
+    """Main function for the setup.py file."""
     with open('./pyproject.toml', 'rb') as toml_file:
         project_data: dict = load(toml_file)
 

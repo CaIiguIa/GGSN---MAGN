@@ -1,3 +1,5 @@
+"""SQLite3 database reader."""
+
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
@@ -36,6 +38,7 @@ class SQLite3KeysReader:
     columns: List[str]
 
     def read(self) -> Dict[str, Keys]:
+        """Read the primary and foreign keys of the given tables in the SQLite3 database."""
         found_keys: Dict[str, Keys] = {}
 
         for table in self.columns:
@@ -47,6 +50,7 @@ class SQLite3KeysReader:
         return found_keys
 
     def _get_primary_keys(self, table: str) -> List[str]:
+        """Retrieve the primary keys of the given table."""
         with sqlite3.connect(self.file) as conn:
             cursor = conn.cursor()
             cursor.execute(f"""
@@ -63,6 +67,7 @@ class SQLite3KeysReader:
             return primary_keys
 
     def _get_foreign_keys(self, table: str) -> Dict[str, Tuple[str, str]]:
+        """Retrieve the foreign keys of the given table."""
         with sqlite3.connect(self.file) as conn:
             cursor = conn.cursor()
             cursor.execute(f"""
@@ -81,15 +86,17 @@ class SQLite3KeysReader:
 @final
 @dataclass(slots=True)
 class SQLite3DataReader:
+    """Reads the data of the given tables in the SQLite3 database."""
     file: Path
     columns: List[str]
     keys: Dict[str, Keys]
 
     def read(self) -> Dict[str, pd.DataFrame]:
+        """Read the data of the given tables in the SQLite3 database."""
         dataframes: Dict[str, pd.DataFrame] = {}
 
         with sqlite3.connect(self.file) as conn:
-            for index, table in enumerate(get_table_names(self.file)):
+            for table in get_table_names(self.file):
                 query: str = f"""
                     SELECT
                         *

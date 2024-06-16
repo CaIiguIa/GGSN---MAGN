@@ -1,7 +1,7 @@
 import networkx as nx
 
-from src.magn.asa.asa_element import ASAElement
-from src.magn.asa.asa_node import ASANode
+from magn.asa.asa_element import ASAElement
+from magn.asa.asa_node import ASANode
 
 
 class ASAGraph:

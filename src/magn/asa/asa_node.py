@@ -2,13 +2,13 @@ from typing import List
 
 import networkx as nx
 
-from src.magn.asa.asa_element import ASAElement
+from magn.asa.asa_element import ASAElement
 
 
 class ASANode:
     """
-    A node in the ASA graph (Aggregative Sorting Associative graph).
-    It can consist of 1 - 3 elements
+    A node in the ASA graph (Aggregate Sorting Associative graph).
+    It can consist of 1-3 elements
 
     Attributes:
     elements:   list of elements in the node
@@ -16,7 +16,7 @@ class ASANode:
     children:   list of children nodes of the current node
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         self.elements: List[ASAElement] = []
         self.parent: ASANode | None = parent
         self.children: List[ASANode] = []
@@ -211,9 +211,8 @@ class ASANode:
         return f"C{depth} [{node.id_keys()}]"
 
     def plot_graph_node(self, graph: nx.Graph, depth):
-        """
-        Plot the ASA graph node. Does not plot the children nodes.
-        """
+        """Plot the ASA graph node. Does not plot the children nodes."""
+
         if self.parent:
             graph.add_edge(self.get_node_name(self.parent, depth - 1), self.get_node_name(self, depth))
         else:
