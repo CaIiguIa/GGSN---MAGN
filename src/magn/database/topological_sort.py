@@ -1,7 +1,7 @@
 """Topological sorting algorithm for sorting dependencies."""
 
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import final, Generator, Dict, Sequence
 
 
@@ -9,7 +9,6 @@ from typing import final, Generator, Dict, Sequence
 @dataclass(slots=True)
 class TopologicalSorter:
     """Sorts the given dependencies topologically and returns a generator of the sorted nodes."""
-    reverse: bool = field(kw_only=True, default=False)
 
     def sort(self, dependencies: Dict[str, Sequence[str]]) -> Generator:
         """Sorts the given dependencies topologically and returns a generator of the sorted nodes."""
@@ -21,10 +20,7 @@ class TopologicalSorter:
                 self._dfs(node, dependencies, visited, stack)
 
         while stack:
-            if self.reverse:
-                yield stack.popleft()
-            else:
-                yield stack.pop()
+            yield stack.pop()
 
     def _dfs(self, node: str, dependencies: Dict[str, Sequence[str]], visited: Dict[str, bool], stack: deque) -> None:
         """Depth-first search helper function."""

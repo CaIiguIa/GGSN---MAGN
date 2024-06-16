@@ -1,8 +1,8 @@
 """Holds the Database class, which is a container for the data and keys of the database tables."""
-
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import final, Sequence, Self, Dict
+from typing import final, Sequence, Self, Dict, List, Generator
 
 import pandas as pd
 
@@ -43,12 +43,19 @@ class Database:
     def get_dependency_graph(self) -> Dict[str, Sequence[str]]:
         """Returns the dependency graph of the database."""
 
-        return {table: list(self.keys[table].foreign_keys.keys()) for table in self.keys}
+        dependencies: Dict[str, List[str]] = defaultdict(list)
 
-    def sort(self) -> Sequence[str]:
+        for table in self.keys:
+            for foreign_table in self.keys[table].foreign_keys.keys():
+                dependencies[foreign_table].append(table)
+                dependencies[table]  # Ensure that the table is in the dictionary
+
+        return dependencies
+
+    def sort(self) -> Generator:
         """Sorts the tables in the database topologically."""
 
         dependencies = self.get_dependency_graph()
         sorter = TopologicalSorter()
 
-        return list(sorter.sort(dependencies))
+        return sorter.sort(dependencies)

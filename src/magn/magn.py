@@ -146,7 +146,7 @@ class MAGNGraph:
             for column_name, value in row.items():
                 if column_name in fk_names:
                     continue
-                asa = self.get_first_asa_by_name(asa_graphs, column_name.__str__())
+                asa = self.get_first_asa_by_name(asa_graphs, str(column_name))
                 element = asa.search(value)
                 if element is None:
                     raise ValueError(f"Element {value} not found in the \"{column_name}\" ASA graph.")
