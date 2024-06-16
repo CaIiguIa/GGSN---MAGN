@@ -173,7 +173,7 @@ class MAGNGraph:
         asa = self.get_first_asa_by_name(self.asa_graphs, fk_foreign_name)
         element = asa.search(fk_value)
         if element is None:
-            raise ValueError(f"Element {object_node.clazz} not found in the \"{fk_foreign_name}\" ASA graph.")
+            raise ValueError(f"Element {fk_value} not found in the \"{fk_foreign_name}\" ASA graph.")
 
         for obj in element.magn_objects:
             obj.objects.append(object_node)

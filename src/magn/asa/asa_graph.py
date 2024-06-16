@@ -157,6 +157,17 @@ class ASAGraph:
                 print(f" --{current_element.bl_next_weight}-- ", end="")
             current_element = current_element.bl_next
 
+    def bl(self):
+        """
+        Returns the bidirectional linked list as a list
+        """
+        elements = []
+        current_element = self.leftmost_element()
+        while current_element:
+            elements.append(current_element.key)
+            current_element = current_element.bl_next
+        return elements
+
     def split_node(self, node: ASANode):
         """
         Split the node if it has more 3 elements
