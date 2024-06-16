@@ -1,8 +1,8 @@
 """Holds the Database class, which is a container for the data and keys of the database tables."""
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, astuple, field, InitVar
 from pathlib import Path
-from typing import final, Sequence, Self, Dict, List, Generator
+from typing import final, Sequence, Self, Dict, List, Generator, Iterator
 
 import pandas as pd
 
@@ -13,17 +13,38 @@ from magn.database.topological_sort import TopologicalSorter
 
 @final
 @dataclass(slots=True)
+class Table:
+    """Represents a table in the database."""
+    data: pd.DataFrame
+    keys: Keys
+
+    def __iter__(self) -> Iterator:
+        """Returns an iterator over the dataclass fields. Basically lets you unpack all the fields of the dataclass."""
+        return iter(astuple(self))
+
+
+@final
+@dataclass(slots=True)
 class Database:
     """Holds the data and keys of the database tables."""
 
-    # (Table name) => (Table data)
-    tables: Dict[str, pd.DataFrame]
-    # (Table name) => (Table keys data)
-    keys: Dict[str, Keys]
+    # (Table name) => (Table data, Table keys)
+    all_data: Dict[str, Table] = field(init=False)
 
-    def __post_init__(self) -> None:
-        if len(self.tables) != len(self.keys):
-            raise ValueError(f"Number of tables and keys do not match ({len(self.tables)} vs {len(self.keys)}).")
+    # InitVar is used to prevent the fields from being initialized in the __init__ method.
+    # They are not part of the object.
+    tables: InitVar[Dict[str, pd.DataFrame]]
+    keys: InitVar[Dict[str, Keys]]
+
+    def __post_init__(self, tables: Dict[str, pd.DataFrame], keys: Dict[str, Keys]) -> None:
+        if len(tables) != len(keys):
+            raise ValueError(f"Number of tables and keys do not match ({len(tables)} vs {len(keys)}).")
+
+        self.all_data = {table_name: Table(tables[table_name], keys[table_name]) for table_name in tables | keys}
+
+    def __getitem__(self, item: str) -> Table:
+        """Lets you subscript the Database object to get a Table object."""
+        return self.all_data[item]
 
     @classmethod
     def from_sqlite3(cls, file: Path) -> Self:
@@ -45,10 +66,10 @@ class Database:
 
         dependencies: Dict[str, List[str]] = defaultdict(list)
 
-        for table in self.keys:
-            for foreign_table in self.keys[table].foreign_keys.keys():
-                dependencies[foreign_table].append(table)
-                dependencies[table]  # Ensure that the table is in the dictionary
+        for table_name, table in self.all_data.items():
+            for foreign_table in table.keys.foreign_keys.keys():
+                dependencies[foreign_table].append(table_name)
+                dependencies[table_name]  # Ensure that the table is in the dictionary
 
         return dependencies
 

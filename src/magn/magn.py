@@ -49,9 +49,8 @@ class MAGNGraph:
 
         print("Processing tables...")
         for table_name in database.sort():
-            table = database.tables[table_name]
-            p_keys = database.keys[table_name].primary_keys
-            f_keys = database.keys[table_name].foreign_keys
+            table, keys = database[table_name]
+            p_keys, f_keys = keys
 
             asa_graphs, objects = magn._process_table(table, p_keys, f_keys, table_name)
             magn.asa_graphs += asa_graphs
