@@ -1,7 +1,6 @@
 from typing import List
 
 from magn.abstract_node import AbstractNode
-from magn.asa.asa_element import ASAElement
 
 
 class MAGNObjectNode(AbstractNode):
@@ -19,7 +18,7 @@ class MAGNObjectNode(AbstractNode):
         self.clazz: str = clazz
         self.duplicates: int = 1
         self.priority: float = 1.0
-        self.values: List[ASAElement] = []
+        self.values: List[AbstractNode] = [] # ASAElements!
         self.objects: List[MAGNObjectNode] = []
 
     def neighbors(self) -> List[AbstractNode]:

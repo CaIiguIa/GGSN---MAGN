@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Self
 
 
 class AbstractNode:
-    def neighbors(self) -> List[AbstractNode]:
+    def neighbors(self) -> List[Self]:
         raise NotImplementedError()

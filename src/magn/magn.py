@@ -14,6 +14,9 @@ from magn.magn_object_node import MAGNObjectNode
 
 @dataclass(slots=True)
 class MAGNGraph:
+    asa_graphs: List[ASAGraph]
+    objects: Dict[str, List[MAGNObjectNode]]
+
     """
     TODO: Add docstring
     TODO: Add generics
@@ -42,6 +45,7 @@ class MAGNGraph:
         database = Database.from_sqlite3(file)
         magn = MAGNGraph()
 
+        print("Processing tables...")
         for table_name in database.sort():
             table = database.tables[table_name]
             p_keys = database.keys[table_name].primary_keys
@@ -50,6 +54,7 @@ class MAGNGraph:
             asa_graphs, objects = magn._process_table(table, p_keys, f_keys, table_name)
             magn.asa_graphs += asa_graphs
             magn.objects[table_name] = objects
+            print(f"Table {table_name} processed.")
 
         return magn
 
@@ -99,9 +104,10 @@ class MAGNGraph:
             f"ASA graph with name {name} not found, check your input data. Column names may be "
             f"incorrect.")
 
-    def _process_table(self, table: pd.DataFrame, primary_keys: List[str],
-                       foreign_keys: Dict[str, Tuple[str, str]], table_name: str) -> Tuple[
-        List[ASAGraph], List[MAGNObjectNode]]:
+    def _process_table(self, table: pd.DataFrame,
+                       primary_keys: List[str],
+                       foreign_keys: Dict[str, Tuple[str, str]],
+                       table_name: str) -> Tuple[List[ASAGraph], List[MAGNObjectNode]]:
         """
         Create an ASA graph from a table.
 
@@ -110,20 +116,21 @@ class MAGNGraph:
         :param foreign_keys: the foreign keys of said table
         """
         # First create the ASA graphs for primary keys
+        data = table.reset_index().dropna()
+
         asa_graphs = []
-        # TODO: many-to-many relationships have no asa's, they have just objects with connections
         for p_key in primary_keys:
-            asa = self._create_asa_graph(table, p_key)
+            asa = self._create_asa_graph(data, p_key)
             asa_graphs.append(asa)
 
         processed_cols = [f_key[0] for f_key in foreign_keys.values()] + primary_keys
-        table_not_processed = table.drop(processed_cols, axis=1)
+        table_not_processed = data.drop(processed_cols, axis=1)
 
         for column_name in table_not_processed.columns:
             asa = self._create_asa_graph(table_not_processed, column_name)
             asa_graphs.append(asa)
 
-        objects = self._create_magn_objects(asa_graphs, table, table_name, foreign_keys)
+        objects = self._create_magn_objects(asa_graphs, data, table_name, foreign_keys)
 
         return asa_graphs, objects
 
@@ -132,7 +139,7 @@ class MAGNGraph:
         column = table[column_name]
         asa_graph = ASAGraph(column_name)
         for value in column:
-            asa_graph.insert(value)
+            asa_graph.insert(value, column_name)
 
         return asa_graph
 
@@ -162,7 +169,7 @@ class MAGNGraph:
 
         return objects
 
-    def _add_object_foreign_keys(self, object_node: MAGNObjectNode, fk_foreign_name: str, fk_value: int | float| str):
+    def _add_object_foreign_keys(self, object_node: MAGNObjectNode, fk_foreign_name: str, fk_value: int | float | str):
         asa = self.get_first_asa_by_name(self.asa_graphs, fk_foreign_name)
         element = asa.search(fk_value)
         if element is None:

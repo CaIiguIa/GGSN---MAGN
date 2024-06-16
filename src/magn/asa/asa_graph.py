@@ -44,10 +44,11 @@ class ASAGraph:
             else:
                 node = node.middle_child()
 
-    def insert(self, key: int | float | str):
+    def insert(self, key: int | float | str, feature_name: str):
         """
         Insert an element with the given key into the ASA graph
 
+        :param feature_name:  the name of the feature that the element represents
         :param key: the key of the element to insert
         """
 
@@ -59,7 +60,7 @@ class ASAGraph:
                 return
 
             if node.is_leaf():
-                new_element = ASAElement(key)
+                new_element = ASAElement(key, feature_name)
                 self.insert_bl(new_element)
                 node.insert_element(new_element)
                 while node is not None and len(node.elements) > 2:
