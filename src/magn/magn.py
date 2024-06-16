@@ -1,7 +1,7 @@
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self, List, Dict
+from typing import Self, List, Dict, Tuple
 
 import pandas as pd
 
@@ -40,13 +40,18 @@ class MAGNGraph:
         :return:
         """
         database = Database.from_sqlite3(file)
+        magn = MAGNGraph()
 
         for table_name in database.sort():
             table = database.tables[table_name]
-            for column in table.columns:
-                column_data = table[column]
+            p_keys = database.keys[table_name].primary_keys
+            f_keys = database.keys[table_name].foreign_keys
 
-        raise NotImplementedError()
+            asa_graphs, objects = magn._process_table(table, p_keys, f_keys, table_name)
+            magn.asa_graphs += asa_graphs
+            magn.objects[table_name] = objects
+
+        return magn
 
     @classmethod
     def from_asa(cls, asa_graphs: List[ASAGraph]) -> Self:
@@ -93,6 +98,78 @@ class MAGNGraph:
         raise ValueError(
             f"ASA graph with name {name} not found, check your input data. Column names may be "
             f"incorrect.")
+
+    def _process_table(self, table: pd.DataFrame, primary_keys: List[str],
+                       foreign_keys: Dict[str, Tuple[str, str]], table_name: str) -> Tuple[
+        List[ASAGraph], List[MAGNObjectNode]]:
+        """
+        Create an ASA graph from a table.
+
+        :param table: the table
+        :param primary_keys: the primary keys of said table
+        :param foreign_keys: the foreign keys of said table
+        """
+        # First create the ASA graphs for primary keys
+        asa_graphs = []
+        # TODO: many-to-many relationships have no asa's, they have just objects with connections
+        for p_key in primary_keys:
+            asa = self._create_asa_graph(table, p_key)
+            asa_graphs.append(asa)
+
+        processed_cols = [f_key[0] for f_key in foreign_keys.values()] + primary_keys
+        table_not_processed = table.drop(processed_cols, axis=1)
+
+        for column_name in table_not_processed.columns:
+            asa = self._create_asa_graph(table_not_processed, column_name)
+            asa_graphs.append(asa)
+
+        objects = self._create_magn_objects(asa_graphs, table, table_name, foreign_keys)
+
+        return asa_graphs, objects
+
+    @classmethod
+    def _create_asa_graph(cls, table: pd.DataFrame, column_name: str) -> ASAGraph:
+        column = table[column_name]
+        asa_graph = ASAGraph(column_name)
+        for value in column:
+            asa_graph.insert(value)
+
+        return asa_graph
+
+    def _create_magn_objects(self, asa_graphs: List[ASAGraph], table: pd.DataFrame, table_name: str,
+                             foreign_keys: Dict[str, Tuple[str, str]]) -> list[MAGNObjectNode]:
+        objects = []
+        fk_cols = [f_key for f_key in foreign_keys.values()]
+        fk_names = [f_key[0] for f_key in foreign_keys.values()]
+
+        for idx, row in table.iterrows():
+            object_node = MAGNObjectNode(table_name)
+            for column_name, value in row.items():
+                if column_name in fk_names:
+                    continue
+                asa = self.get_first_asa_by_name(asa_graphs, column_name.__str__())
+                element = asa.search(value)
+                if element is None:
+                    raise ValueError(f"Element {value} not found in the \"{column_name}\" ASA graph.")
+
+                element.magn_objects.append(object_node)
+                object_node.values.append(element)
+
+            for fk_name, fk_foreign_name in fk_cols:
+                fk_value = row[fk_name]
+                self._add_object_foreign_keys(object_node, fk_foreign_name, fk_value)
+            objects.append(object_node)
+
+        return objects
+
+    def _add_object_foreign_keys(self, object_node: MAGNObjectNode, fk_foreign_name: str, fk_value: int | float| str):
+        asa = self.get_first_asa_by_name(self.asa_graphs, fk_foreign_name)
+        element = asa.search(fk_value)
+        if element is None:
+            raise ValueError(f"Element {object_node.clazz} not found in the \"{fk_foreign_name}\" ASA graph.")
+
+        for obj in element.magn_objects:
+            obj.objects.append(object_node)
 
     def _update_priorities(self, neurons: List[ASAElement], target_value: int | float | str, learning_rate: float):
         """
@@ -219,3 +296,10 @@ class MAGNGraph:
                 stimulation += current_node.priority * next_node.magn_weight()
 
         return stimulation
+
+    @classmethod
+    def get_first_asa_by_name(cls, asa_graphs: List[ASAGraph], name: str) -> ASAGraph:
+        for asa_graph in asa_graphs:
+            if asa_graph.name == name:
+                return asa_graph
+        raise ValueError(f"ASA graph with name {name} not found.")

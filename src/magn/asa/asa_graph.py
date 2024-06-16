@@ -18,7 +18,7 @@ class ASAGraph:
         self.name = name
         # self.sensor = None
 
-    def search(self, key: int | float | str) -> ASANode | None:
+    def search(self, key: int | float | str) -> ASAElement | None:
         """
         Search for a node in the ASA graph with the given key
 
