@@ -3,7 +3,7 @@
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self, List, Dict, Tuple
+from typing import Self, List, Dict, Tuple, Final
 
 import pandas as pd
 
@@ -60,11 +60,13 @@ class MAGNGraph:
         return magn
 
     def fit(self, data: pd.DataFrame, num_epochs: int, learning_rate: float):
-        if 'Target' not in data.keys():
+        mock_name: Final[str] = Database.mock_column_name
+
+        if mock_name not in data.keys():
             raise NameError("Data must have a target column.")
 
-        data_no_target = data.drop(['Target'], axis=1)
-        data_target = data['Target']
+        data_no_target = data.drop([mock_name], axis=1)
+        data_target = data[mock_name]
         asa_graphs = [self.get_asa_by_name(name) for name in data_no_target.keys()]
 
         for epoch in range(num_epochs):

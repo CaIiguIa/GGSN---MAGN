@@ -21,7 +21,7 @@ def get_table_names(file: Path) -> List[str]:
                 FROM
                     sqlite_master
                 WHERE
-                    type='table';
+                    type='table' AND name NOT LIKE 'sqlite_%';
             """)
 
         tables = cursor.fetchall()

@@ -2,7 +2,8 @@
 from collections import defaultdict
 from dataclasses import dataclass, astuple, field, InitVar
 from pathlib import Path
-from typing import final, Sequence, Self, Dict, List, Generator, Iterator
+from typing import final, Sequence, Self, Dict, List, Generator, Iterator, ClassVar, Optional
+from random import seed, choice
 
 import pandas as pd
 
@@ -36,6 +37,8 @@ class Database:
     tables: InitVar[Dict[str, pd.DataFrame]]
     keys: InitVar[Dict[str, Keys]]
 
+    mock_column_name: ClassVar[str] = "target"
+
     def __post_init__(self, tables: Dict[str, pd.DataFrame], keys: Dict[str, Keys]) -> None:
         if len(tables) != len(keys):
             raise ValueError(f"Number of tables and keys do not match ({len(tables)} vs {len(keys)}).")
@@ -61,7 +64,7 @@ class Database:
 
         return cls(data, keys)
 
-    def get_dependency_graph(self) -> Dict[str, Sequence[str]]:
+    def _get_dependency_graph(self) -> Dict[str, Sequence[str]]:
         """Returns the dependency graph of the database."""
 
         dependencies: Dict[str, List[str]] = defaultdict(list)
@@ -76,7 +79,20 @@ class Database:
     def sort(self) -> Generator:
         """Sorts the tables in the database topologically."""
 
-        dependencies = self.get_dependency_graph()
+        dependencies = self._get_dependency_graph()
         sorter = TopologicalSorter()
 
         return sorter.sort(dependencies)
+
+    def create_mock_target(self, table_name: str, choices_iterable: Optional[Sequence] = None, seed_id: int = 0
+                           ) -> pd.DataFrame:
+        """Creates a mock target DataFrame for the given table."""
+        seed(seed_id)
+
+        data, _ = self[table_name]
+        if choices_iterable is None:
+            choices_iterable = data.columns
+
+        data[self.mock_column_name] = data.apply(lambda _: choice(choices_iterable), axis=1)
+
+        return data
