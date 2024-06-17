@@ -66,7 +66,8 @@ class MAGNGraph:
                 self._update_priorities(activated_neurons, target_value, learning_rate)
 
     def predict(self, data: pd.Series, target: str):
-        activated_neurons = list(map(lambda _asa: _asa.search(data[_asa.name]), self.asa_graphs))
+        asa_graphs = [asa for asa in self.asa_graphs if asa.name in data.keys()]
+        activated_neurons = list(map(lambda _asa: _asa.search(data[_asa.name]), asa_graphs))
         return self._calculate_prediction(activated_neurons, target)
 
     def get_asa_by_name(self, name: str) -> ASAGraph:
