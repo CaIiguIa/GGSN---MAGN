@@ -26,10 +26,14 @@ class MAGNGraph:
     objects: Dict[str, List[MAGNObjectNode]] = field(default_factory=dict)
 
     @classmethod
-    def from_sqlite3(cls, file: Path) -> Self:
+    def from_sqlite3(cls, file: Path, max_rows: int | None = None) -> Self:
         """Substitute for the lack in the ability to create many constructors in python."""
+        database = Database.from_sqlite3(file, max_rows)
+        return cls.from_database(database)
 
-        database = Database.from_sqlite3(file)
+    @classmethod
+    def from_database(cls, database: Database) -> Self:
+
         magn = MAGNGraph()
 
         print("Processing tables...")
@@ -219,6 +223,8 @@ class MAGNGraph:
         :param values: the values to normalize
         :return: the normalized values
         """
+        if not values:
+            return [0.0]
         max_value = max(values)
         min_value = min(values)
         return [
