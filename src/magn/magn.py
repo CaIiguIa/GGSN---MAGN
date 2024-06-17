@@ -41,7 +41,7 @@ class MAGNGraph:
             magn.asa_graphs += asa_graphs
             magn.objects[table_name] = objects
             print(f"Table {table_name} processed.")
-
+        print("Tables processed.")
         return magn
 
     def fit(self, data: pd.DataFrame, num_epochs: int, learning_rate: float):
@@ -52,14 +52,16 @@ class MAGNGraph:
 
         data_no_target = data.drop([mock_name], axis=1)
         data_target = data[mock_name]
-        asa_graphs = [self.get_asa_by_name(name) for name in data_no_target.keys()]
-
+        asa_graphs = [self.get_asa_by_name(name) for name in data_no_target.columns]
+        print("Teaching MAGN...")
         for epoch in range(num_epochs):
+            print(f"epoch {epoch}...")
             for idx, row in data_no_target.iterrows():
                 target_col = data_target[idx]
                 target_value = row[target_col]
                 row_no_target = row.drop([target_col])
-                activated_neurons = list(map(lambda _asa: _asa.search(row_no_target[_asa.name]), asa_graphs))
+                asa_no_target = [asa for asa in asa_graphs if asa.name != target_col]
+                activated_neurons = list(map(lambda _asa: _asa.search(row_no_target[_asa.name]), asa_no_target))
 
                 self._update_priorities(activated_neurons, target_value, learning_rate)
 
@@ -170,7 +172,9 @@ class MAGNGraph:
             deltas = self._calc_delta_numerical(neurons, target_value)
 
         for neuron, delta in zip(neurons, deltas):
-            if delta == 0.0:
+            if isinstance(neuron.key, str):  # TODO: REALLY BAD, no isinstance..
+                neuron.priority *= (1 - learning_rate * delta)
+            elif delta == 0.0:
                 neuron.priority *= (1 + learning_rate * neuron.key)
             else:
                 neuron.priority *= (1 - learning_rate * delta * neuron.key)
@@ -202,7 +206,8 @@ class MAGNGraph:
         deltas = []
 
         for neuron in neurons:
-            deltas.append(target_value - neuron.key)
+            if not isinstance(neuron.key, str):  # TODO: REALLY BAD, no isinstance...
+                deltas.append(target_value - neuron.key)
 
         return self._normalize(deltas)
 
@@ -215,7 +220,10 @@ class MAGNGraph:
         """
         max_value = max(values)
         min_value = min(values)
-        return [(value - min_value) / (max_value - min_value) for value in values]
+        return [
+            ((value - min_value) / (max_value - min_value) if (max_value - min_value) != 0.0 else 0.0)
+            for value in values
+        ]
 
     def _calculate_prediction(self, activated_neurons: List[ASAElement], target: str) -> int | float | str:
         """
