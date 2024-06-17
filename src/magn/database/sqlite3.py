@@ -1,6 +1,6 @@
 """SQLite3 database reader."""
 
-import sqlite3
+from sqlite3 import connect
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple, final, List, Dict, Optional
@@ -13,7 +13,7 @@ from magn.database.keys import Keys
 def get_table_names(file: Path) -> List[str]:
     """Retrieve the names of all tables in the database."""
 
-    with sqlite3.connect(file) as conn:
+    with connect(file) as conn:
         cursor = conn.cursor()
         cursor.execute("""
                 SELECT
@@ -21,7 +21,7 @@ def get_table_names(file: Path) -> List[str]:
                 FROM
                     sqlite_master
                 WHERE
-                    type='table' AND name NOT LIKE 'sqlite_%';
+                    type='table';
             """)
 
         tables = cursor.fetchall()
@@ -51,7 +51,7 @@ class SQLite3KeysReader:
 
     def _get_primary_keys(self, table: str) -> List[str]:
         """Retrieve the primary keys of the given table."""
-        with sqlite3.connect(self.file) as conn:
+        with connect(self.file) as conn:
             cursor = conn.cursor()
             cursor.execute(f"""
                 PRAGMA
@@ -68,7 +68,7 @@ class SQLite3KeysReader:
 
     def _get_foreign_keys(self, table: str) -> Dict[str, Tuple[str, str]]:
         """Retrieve the foreign keys of the given table."""
-        with sqlite3.connect(self.file) as conn:
+        with connect(self.file) as conn:
             cursor = conn.cursor()
             cursor.execute(f"""
                 PRAGMA
@@ -95,7 +95,7 @@ class SQLite3DataReader:
         """Read the data of the given tables in the SQLite3 database."""
         dataframes: Dict[str, pd.DataFrame] = {}
 
-        with sqlite3.connect(self.file) as conn:
+        with connect(self.file) as conn:
             for table in get_table_names(self.file):
                 query: str = f"""
                     SELECT
@@ -107,7 +107,7 @@ class SQLite3DataReader:
                 keys = self.keys[table]
 
                 if max_rows is not None:
-                    data = pd.read_sql_query(query, conn).head(max_rows)
+                    data = pd.read_sql_query(query, conn).sort_index().head(max_rows)
                 else:
                     data = pd.read_sql_query(query, conn)
 
