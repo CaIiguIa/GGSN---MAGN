@@ -43,6 +43,9 @@ class Database:
         if len(tables) != len(keys):
             raise ValueError(f"Number of tables and keys do not match ({len(tables)} vs {len(keys)}).")
 
+        if tables.keys() | keys.keys() != tables.keys() & keys.keys():
+            raise ValueError("Keys in tables object do not match keys in keys object!")
+
         self.all_data = {table_name: Table(tables[table_name], keys[table_name]) for table_name in tables | keys}
 
     def __getitem__(self, item: str) -> Table:
@@ -93,6 +96,6 @@ class Database:
         if choices_iterable is None:
             choices_iterable = data.columns
 
-        data[self.mock_column_name] = data.apply(lambda _: choice(choices_iterable), axis=1)
+        data[Database.mock_column_name] = data.apply(lambda _: choice(choices_iterable), axis=1)
 
         return data

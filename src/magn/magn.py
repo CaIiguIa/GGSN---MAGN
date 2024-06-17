@@ -38,12 +38,8 @@ class MAGNGraph:
 
     @classmethod
     def from_sqlite3(cls, file: Path) -> Self:
-        """
-        Substitute for the lack in the ability to create many constructors in python.
+        """Substitute for the lack in the ability to create many constructors in python."""
 
-        :param file:
-        :return:
-        """
         database = Database.from_sqlite3(file)
         magn = MAGNGraph()
 
