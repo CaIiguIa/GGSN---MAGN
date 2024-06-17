@@ -107,7 +107,7 @@ class SQLite3DataReader:
                 keys = self.keys[table]
 
                 if max_rows is not None:
-                    data = pd.read_sql_query(query, conn).sort_index().head(max_rows)
+                    data = pd.read_sql_query(query, conn)
                 else:
                     data = pd.read_sql_query(query, conn)
 
@@ -117,6 +117,6 @@ class SQLite3DataReader:
                 )
                 data.name = table
 
-                dataframes[table] = data
+                dataframes[table] = data.sort_index().head(max_rows)
 
         return dataframes
