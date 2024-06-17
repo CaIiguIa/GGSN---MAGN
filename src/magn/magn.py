@@ -1,7 +1,7 @@
 """MAGN graph module."""
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Self, List, Dict, Tuple, Final
 
@@ -16,25 +16,14 @@ from magn.magn_object_node import MAGNObjectNode
 
 @dataclass(slots=True)
 class MAGNGraph:
-    asa_graphs: List[ASAGraph]
-    objects: Dict[str, List[MAGNObjectNode]]
-
-    """
+    """Class related to creating and managing MAGN.
     TODO: Add docstring
     TODO: Add generics
     TODO: Change Any to proper ASAGraph[T] type
     """
 
-    def __init__(self):
-        """
-        Initialize the MAGN graph.
-
-        Attributes:
-        asa_graphs: list of ASA graphs
-        objects:    map of table names to a list of MAGN object nodes
-        """
-        self.asa_graphs: List[ASAGraph] = []
-        self.objects: Dict[str, List[MAGNObjectNode]] = {}
+    asa_graphs: List[ASAGraph] = field(default_factory=list)
+    objects: Dict[str, List[MAGNObjectNode]] = field(default_factory=dict)
 
     @classmethod
     def from_sqlite3(cls, file: Path) -> Self:

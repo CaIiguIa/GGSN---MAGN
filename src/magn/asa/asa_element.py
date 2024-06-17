@@ -16,7 +16,7 @@ class ASAElement(AbstractNode):
     magn_object:            list that stores the MAGN graph objects associated with the node.
     """
 
-    def __init__(self, key: int | float | str, feature: str):
+    def __init__(self, key: int | float | str, feature: str) -> None:
         if key is None:
             raise ValueError("Key cannot be None")
         self.key: int | float | str = key
