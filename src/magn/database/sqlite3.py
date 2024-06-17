@@ -3,7 +3,7 @@
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, final, List, Dict
+from typing import Tuple, final, List, Dict, Optional
 
 import pandas as pd
 
@@ -91,7 +91,7 @@ class SQLite3DataReader:
     columns: List[str]
     keys: Dict[str, Keys]
 
-    def read(self) -> Dict[str, pd.DataFrame]:
+    def read(self, max_rows: Optional[int] = None) -> Dict[str, pd.DataFrame]:
         """Read the data of the given tables in the SQLite3 database."""
         dataframes: Dict[str, pd.DataFrame] = {}
 
@@ -106,7 +106,11 @@ class SQLite3DataReader:
 
                 keys = self.keys[table]
 
-                data = pd.read_sql_query(query, conn)
+                if max_rows is not None:
+                    data = pd.read_sql_query(query, conn).head(max_rows)
+                else:
+                    data = pd.read_sql_query(query, conn)
+
                 data.set_index(
                     list({*keys.primary_keys, *list(map(lambda x: x[0], keys.foreign_keys.values()))}),
                     inplace=True,

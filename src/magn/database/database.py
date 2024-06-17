@@ -53,7 +53,7 @@ class Database:
         return self.all_data[item]
 
     @classmethod
-    def from_sqlite3(cls, file: Path) -> Self:
+    def from_sqlite3(cls, file: Path, max_rows: Optional[int] = None) -> Self:
         """Substitute for the lack in the ability to create many constructors in python.
         Creates a Database object from an SQLite3 database file."""
 
@@ -63,7 +63,7 @@ class Database:
         keys = keys_reader.read()
 
         data_reader = SQLite3DataReader(file, all_tables, keys)
-        data = data_reader.read()
+        data = data_reader.read(max_rows)
 
         return cls(data, keys)
 

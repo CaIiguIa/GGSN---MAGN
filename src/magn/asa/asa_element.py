@@ -19,6 +19,7 @@ class ASAElement(AbstractNode):
     def __init__(self, key: int | float | str, feature: str) -> None:
         if key is None:
             raise ValueError("Key cannot be None")
+
         self.key: int | float | str = key
         self.feature: str = feature
         self.key_duplicates: int = 1

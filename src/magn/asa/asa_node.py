@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Self
 
 import networkx as nx
 
@@ -18,8 +18,8 @@ class ASANode:
 
     def __init__(self, parent=None) -> None:
         self.elements: List[ASAElement] = []
-        self.parent: ASANode | None = parent
-        self.children: List[ASANode] = []
+        self.parent: Self | None = parent
+        self.children: List[Self] = []
 
     def search(self, key):
         """
@@ -142,7 +142,7 @@ class ASANode:
         self.elements.append(new_element)
         self.elements.sort(key=lambda element: element.key)
 
-    def insert_child(self, node: 'ASANode'):
+    def insert_child(self, node: Self):
         """
         Inserts child node to the node in the correct order
         """
@@ -162,7 +162,7 @@ class ASANode:
     def remove_element(self, element_to_remove: ASAElement):
         self.elements = [element for element in self.elements if element.key != element_to_remove.key]
 
-    def remove_child(self, node: 'ASANode'):
+    def remove_child(self, node: Self) -> None:
         self.children = [child for child in self.children if child.keys() != node.keys()]
 
     def split_into_two(self):
@@ -205,7 +205,7 @@ class ASANode:
     def id_keys(self):
         return ", ".join(map(str, self.keys()))
 
-    def get_node_name(self, node: 'ASANode', depth: int):
+    def get_node_name(self, node: Self, depth: int) -> str:
         if depth == 0:
             return f"Root [{node.id_keys()}]"
         return f"C{depth} [{node.id_keys()}]"
