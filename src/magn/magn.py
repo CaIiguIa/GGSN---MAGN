@@ -17,7 +17,7 @@ from magn.magn_object_node import MAGNObjectNode
 
 @dataclass(slots=True)
 class MAGNGraph:
-    """Class related to creating and managing MAGN.
+    """Clas s related to creating and managing MAGN.
     TODO: Add docstring
     TODO: Add generics
     TODO: Change Any to proper ASAGraph[T] type
@@ -64,11 +64,16 @@ class MAGNGraph:
             for idx, row in data_no_target.iterrows():
                 target_col = data_target[idx]
                 target_value = row[target_col]
+                asa_target = [asa for asa in asa_graphs if asa.name == target_col][0]
+                target_element = asa_target.search(target_value)
+                if target_element is None:
+                    raise ValueError(f"Element {target_value} not found in the \"{target_col}\" ASA graph.")
                 row_no_target = row.drop([target_col])
                 asa_no_target = [asa for asa in asa_graphs if asa.name != target_col]
                 activated_neurons = [_asa.search(row_no_target[_asa.name]) for _asa in asa_no_target]
+                activated_col_names = data_no_target.columns
 
-                self._update_priorities(activated_neurons, target_value, learning_rate)
+                self._update_priorities(activated_neurons, activated_col_names, target_element, learning_rate)
 
     def predict(self, data: pd.Series, target: str):
         data_no_target = data
@@ -168,36 +173,34 @@ class MAGNGraph:
         for obj in element.magn_objects:
             obj.objects.append(object_node)
 
-    def _update_priorities(self, activated_columns: List[str], target_value: ASAElement, learning_rate: float) -> None:
+    def _update_priorities(self, activated_neurons: List[ASAElement], activated_columns: List[str],
+                           target_value: ASAElement, learning_rate: float) -> None:
         """
         Update the priorities of the neurons in the MAGN graph.
 
-        :param neurons: Neurons to update
-        :param target_value: the target value
+        :param activated_neurons: neurons with values passed in the data
+        :param activated_columns: columns passed in the data
+        :param target_value: the target value as ASAElement in the graph
         :param learning_rate: the learning rate
         """
-        # if isinstance(target_value, str):
-        #     deltas = self._calc_delta_categorical(neurons, target_value)
-        # else:
-        #     deltas = self._calc_delta_numerical(neurons, target_value)
+        if isinstance(target_value.key, str):
+            deltas = self._calc_delta_categorical(activated_neurons, target_value.key)
+        else:
+            deltas = self._calc_delta_numerical(activated_neurons, target_value.key)
 
-        # weź target value (ASAElement)
-        for column in activated_columns:
-            # TODO: bfs does not go into non-active node(ASAElement)
-            paths = self.bfs(target_value, column)
-            for path in paths:
+        for activated_neuron in activated_neurons:
+            paths = self.bfs(target_value, activated_neuron)
+            activations = [self._stimulation(path) for path in paths]
+            activations = self._normalize(activations)
+            for path, activation in zip(paths, activations):
+                neuron_idx = activated_neurons.index(path[-1])
+                delta = deltas[neuron_idx]
+
                 for neuron in path:
-                    if isinstance(neuron.key, str):
-                        neuron.priority *= (1.0 - learning_rate * delta)
-                    elif delta == 0.0:
-                        neuron.priority *= (1.0 + learning_rate * neuron.key)
+                    if delta == 0.0:
+                        neuron.priority *= (1.0 + learning_rate * activation)
                     else:
-                        neuron.priority *= (1.0 - learning_rate * delta * neuron.key)
-
-        # na każdej ścieżce od target_value do jakiejkolwiek ASAElement znajdującego się w ASAGraph, który został aktywowany (ASAGraphy, które odpowiadają kolumnom w danych wejściowych)
-        # na każdym neuronie na ścieżce
-
-
+                        neuron.priority *= (1.0 - learning_rate * delta * activation)
 
     def _calc_delta_categorical(self, neurons: List[ASAElement], target_value: str) -> List[float]:
         """
@@ -226,7 +229,9 @@ class MAGNGraph:
         deltas = []
 
         for neuron in neurons:
-            if not isinstance(neuron.key, str):  # TODO: REALLY BAD, no isinstance...
+            if isinstance(neuron.key, str):
+                deltas.append(0.0)
+            else:
                 deltas.append(target_value - neuron.key)
 
         return self._normalize(deltas)
@@ -238,6 +243,9 @@ class MAGNGraph:
         :param values: the values to normalize
         :return: the normalized values
         """
+        if not values:
+            return [0.0]
+
         max_value = max(values)
         min_value = min(values)
         return [
@@ -268,21 +276,36 @@ class MAGNGraph:
             raise ValueError("Implementation error. The target feature is not an ASA element.")
         return max_element.key
 
-    def bfs(self, start_node: ASAElement, target_feature: str):
+    def bfs(self, start_node: ASAElement, target_feature: str | ASAElement):
         queue: deque[(AbstractNode, List[AbstractNode])] = deque(
             [(start_node, [start_node])])  # queue of (current_node, path)
         paths = []
+        target_is_element = isinstance(target_feature, ASAElement)
+        target_is_column = isinstance(target_feature, str)
 
         while queue:
             current_node, path = queue.popleft()
 
-            if isinstance(current_node, ASAElement) and current_node.feature == target_feature:
+            if self._bfs_chack_acceptable_element(current_node, target_feature):
                 paths.append(path)
+
             else:
                 for neighbor in current_node.neighbors():
-                    if neighbor not in path:
+                    neighbor_is_object = isinstance(neighbor, MAGNObjectNode)
+                    neighbor_is_acceptable_element = (isinstance(neighbor, ASAElement) and
+                                                      self._bfs_chack_acceptable_element(neighbor, target_feature))
+                    if neighbor not in path and (neighbor_is_object or neighbor_is_acceptable_element):
                         queue.append((neighbor, path + [neighbor]))
         return paths
+
+    def _bfs_chack_acceptable_element(self, element1: ASAElement, feature: ASAElement | str) -> bool:
+        if not isinstance(element1, ASAElement):
+            return False
+        if isinstance(feature, ASAElement):
+            return element1.key == feature.key and element1.feature == feature.feature
+        elif isinstance(feature, str):
+            return element1.feature == feature
+        return False
 
     def _stimulation(self, path: List[AbstractNode]) -> float:
         stimulation = 0.0
