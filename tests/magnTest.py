@@ -22,7 +22,7 @@ magn.fit(x_train, 100, 0.1)
 
 x_test = x_train.iloc[4]
 x_test = pd.Series(x_test)
-x_test['target'] = 'score'
+x_test.drop("target", inplace=True)
 prediction = magn.predict(x_test, 'score')
 print(f"Predicted score: {prediction}, should be {x_test['score']}")
 

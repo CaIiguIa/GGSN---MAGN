@@ -2,6 +2,7 @@
 
 from collections import deque
 from dataclasses import dataclass, field
+from itertools import pairwise
 from pathlib import Path
 from typing import Self, List, Dict, Tuple, Final
 
@@ -65,13 +66,17 @@ class MAGNGraph:
                 target_value = row[target_col]
                 row_no_target = row.drop([target_col])
                 asa_no_target = [asa for asa in asa_graphs if asa.name != target_col]
-                activated_neurons = list(map(lambda _asa: _asa.search(row_no_target[_asa.name]), asa_no_target))
+                activated_neurons = [_asa.search(row_no_target[_asa.name]) for _asa in asa_no_target]
 
                 self._update_priorities(activated_neurons, target_value, learning_rate)
 
     def predict(self, data: pd.Series, target: str):
-        asa_graphs = [asa for asa in self.asa_graphs if asa.name in data.keys()]
-        activated_neurons = list(map(lambda _asa: _asa.search(data[_asa.name]), asa_graphs))
+        data_no_target = data
+        if target in data_no_target.keys():
+            data_no_target = data_no_target.drop(target)
+        asa_graphs = [asa for asa in self.asa_graphs if asa.name in data_no_target.keys()]
+        activated_neurons = list(map(lambda _asa: _asa.search(data_no_target[_asa.name]), asa_graphs))
+
         return self._calculate_prediction(activated_neurons, target)
 
     def get_asa_by_name(self, name: str) -> ASAGraph:
@@ -163,7 +168,7 @@ class MAGNGraph:
         for obj in element.magn_objects:
             obj.objects.append(object_node)
 
-    def _update_priorities(self, neurons: List[ASAElement], target_value: int | float | str, learning_rate: float):
+    def _update_priorities(self, activated_columns: List[str], target_value: ASAElement, learning_rate: float) -> None:
         """
         Update the priorities of the neurons in the MAGN graph.
 
@@ -171,18 +176,28 @@ class MAGNGraph:
         :param target_value: the target value
         :param learning_rate: the learning rate
         """
-        if isinstance(target_value, str):
-            deltas = self._calc_delta_categorical(neurons, target_value)
-        else:
-            deltas = self._calc_delta_numerical(neurons, target_value)
+        # if isinstance(target_value, str):
+        #     deltas = self._calc_delta_categorical(neurons, target_value)
+        # else:
+        #     deltas = self._calc_delta_numerical(neurons, target_value)
 
-        for neuron, delta in zip(neurons, deltas):
-            if isinstance(neuron.key, str):  # TODO: REALLY BAD, no isinstance..
-                neuron.priority *= (1 - learning_rate * delta)
-            elif delta == 0.0:
-                neuron.priority *= (1 + learning_rate * neuron.key)
-            else:
-                neuron.priority *= (1 - learning_rate * delta * neuron.key)
+        # weź target value (ASAElement)
+        for column in activated_columns:
+            # TODO: bfs does not go into non-active node(ASAElement)
+            paths = self.bfs(target_value, column)
+            for path in paths:
+                for neuron in path:
+                    if isinstance(neuron.key, str):
+                        neuron.priority *= (1.0 - learning_rate * delta)
+                    elif delta == 0.0:
+                        neuron.priority *= (1.0 + learning_rate * neuron.key)
+                    else:
+                        neuron.priority *= (1.0 - learning_rate * delta * neuron.key)
+
+        # na każdej ścieżce od target_value do jakiejkolwiek ASAElement znajdującego się w ASAGraph, który został aktywowany (ASAGraphy, które odpowiadają kolumnom w danych wejściowych)
+        # na każdym neuronie na ścieżce
+
+
 
     def _calc_delta_categorical(self, neurons: List[ASAElement], target_value: str) -> List[float]:
         """
@@ -223,8 +238,6 @@ class MAGNGraph:
         :param values: the values to normalize
         :return: the normalized values
         """
-        if not values:
-            return [0.0]
         max_value = max(values)
         min_value = min(values)
         return [
@@ -274,7 +287,7 @@ class MAGNGraph:
     def _stimulation(self, path: List[AbstractNode]) -> float:
         stimulation = 0.0
         # Iterate over neighboring pairs
-        for i, (current_node, next_node) in enumerate(zip(path, path[1:])):
+        for current_node, next_node in pairwise(path):
             current_is_element = isinstance(current_node, ASAElement)
             current_is_object = isinstance(current_node, MAGNObjectNode)
             next_is_element = isinstance(next_node, ASAElement)
@@ -290,7 +303,7 @@ class MAGNGraph:
                 stimulation += current_node.priority * current_node.magn_weight()
 
             if current_is_object and next_is_element:
-                stimulation += current_node.priority * next_node.magn_weight()
+                stimulation += current_node.priority * 1.0
 
             if current_is_object and next_is_object:
                 stimulation += current_node.priority * next_node.magn_weight()
@@ -302,4 +315,5 @@ class MAGNGraph:
         for asa_graph in asa_graphs:
             if asa_graph.name == name:
                 return asa_graph
+
         raise ValueError(f"ASA graph with name {name} not found.")
