@@ -1,7 +1,7 @@
 import networkx as nx
 
-from src.magn.asa.asa_element import ASAElement
-from src.magn.asa.asa_node import ASANode
+from magn.asa.asa_element import ASAElement
+from magn.asa.asa_node import ASANode
 
 
 class ASAGraph:
@@ -18,7 +18,7 @@ class ASAGraph:
         self.name = name
         # self.sensor = None
 
-    def search(self, key: int | float | str) -> ASANode | None:
+    def search(self, key: int | float | str) -> ASAElement | None:
         """
         Search for a node in the ASA graph with the given key
 
@@ -44,10 +44,11 @@ class ASAGraph:
             else:
                 node = node.middle_child()
 
-    def insert(self, key: int | float | str):
+    def insert(self, key: int | float | str, feature_name: str):
         """
         Insert an element with the given key into the ASA graph
 
+        :param feature_name:  the name of the feature that the element represents
         :param key: the key of the element to insert
         """
 
@@ -59,7 +60,7 @@ class ASAGraph:
                 return
 
             if node.is_leaf():
-                new_element = ASAElement(key)
+                new_element = ASAElement(key, feature_name)
                 self.insert_bl(new_element)
                 node.insert_element(new_element)
                 while node is not None and len(node.elements) > 2:
@@ -155,6 +156,17 @@ class ASAGraph:
             if current_element.bl_next:
                 print(f" --{current_element.bl_next_weight}-- ", end="")
             current_element = current_element.bl_next
+
+    def bl(self):
+        """
+        Returns the bidirectional linked list as a list
+        """
+        elements = []
+        current_element = self.leftmost_element()
+        while current_element:
+            elements.append(current_element.key)
+            current_element = current_element.bl_next
+        return elements
 
     def split_node(self, node: ASANode):
         """

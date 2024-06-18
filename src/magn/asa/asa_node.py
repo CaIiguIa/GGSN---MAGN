@@ -1,14 +1,14 @@
-from typing import List
+from typing import List, Self
 
 import networkx as nx
 
-from src.magn.asa.asa_element import ASAElement
+from magn.asa.asa_element import ASAElement
 
 
 class ASANode:
     """
-    A node in the ASA graph (Aggregative Sorting Associative graph).
-    It can consist of 1 - 3 elements
+    A node in the ASA graph (Aggregate Sorting Associative graph).
+    It can consist of 1-3 elements
 
     Attributes:
     elements:   list of elements in the node
@@ -16,10 +16,10 @@ class ASANode:
     children:   list of children nodes of the current node
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:
         self.elements: List[ASAElement] = []
-        self.parent: ASANode | None = parent
-        self.children: List[ASANode] = []
+        self.parent: Self | None = parent
+        self.children: List[Self] = []
 
     def search(self, key):
         """
@@ -142,7 +142,7 @@ class ASANode:
         self.elements.append(new_element)
         self.elements.sort(key=lambda element: element.key)
 
-    def insert_child(self, node: 'ASANode'):
+    def insert_child(self, node: Self):
         """
         Inserts child node to the node in the correct order
         """
@@ -162,7 +162,7 @@ class ASANode:
     def remove_element(self, element_to_remove: ASAElement):
         self.elements = [element for element in self.elements if element.key != element_to_remove.key]
 
-    def remove_child(self, node: 'ASANode'):
+    def remove_child(self, node: Self) -> None:
         self.children = [child for child in self.children if child.keys() != node.keys()]
 
     def split_into_two(self):
@@ -205,15 +205,14 @@ class ASANode:
     def id_keys(self):
         return ", ".join(map(str, self.keys()))
 
-    def get_node_name(self, node: 'ASANode', depth: int):
+    def get_node_name(self, node: Self, depth: int) -> str:
         if depth == 0:
             return f"Root [{node.id_keys()}]"
         return f"C{depth} [{node.id_keys()}]"
 
     def plot_graph_node(self, graph: nx.Graph, depth):
-        """
-        Plot the ASA graph node. Does not plot the children nodes.
-        """
+        """Plot the ASA graph node. Does not plot the children nodes."""
+
         if self.parent:
             graph.add_edge(self.get_node_name(self.parent, depth - 1), self.get_node_name(self, depth))
         else:

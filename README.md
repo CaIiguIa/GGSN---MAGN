@@ -1,0 +1,1 @@
+# MAGN - Python implementation of MAGNs.

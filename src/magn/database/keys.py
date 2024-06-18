@@ -1,5 +1,7 @@
-from dataclasses import dataclass
-from typing import final, List, Dict, Tuple
+"""Contains the Keys class, which represents a set of keys for a table."""
+
+from dataclasses import dataclass, astuple
+from typing import final, List, Dict, Tuple, Iterator
 
 
 @final
@@ -12,3 +14,7 @@ class Keys:
 
     # Dictionary of foreign keys - (what other table) => (from column, to column)
     foreign_keys: Dict[str, Tuple[str, str]]
+
+    def __iter__(self) -> Iterator:
+        """Returns an iterator over the dataclass fields. Basically lets you unpack all the fields of the dataclass."""
+        return iter(astuple(self))

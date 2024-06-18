@@ -1,7 +1,10 @@
+"""MAGN graph module."""
+
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from itertools import pairwise
 from pathlib import Path
-from typing import Self, List, Dict
+from typing import Self, List, Dict, Tuple, Final
 
 import pandas as pd
 
@@ -14,69 +17,66 @@ from magn.magn_object_node import MAGNObjectNode
 
 @dataclass(slots=True)
 class MAGNGraph:
-    """
+    """Class related to creating and managing MAGN.
     TODO: Add docstring
     TODO: Add generics
     TODO: Change Any to proper ASAGraph[T] type
     """
 
-    def __init__(self):
-        """
-        Initialize the MAGN graph.
-
-        Attributes:
-        asa_graphs: list of ASA graphs
-        objects:    map of table names to a list of MAGN object nodes
-        """
-        self.asa_graphs: List[ASAGraph] = []
-        self.objects: Dict[str, List[MAGNObjectNode]] = {}
+    asa_graphs: List[ASAGraph] = field(default_factory=list)
+    objects: Dict[str, List[MAGNObjectNode]] = field(default_factory=dict)
 
     @classmethod
-    def from_sqlite3(cls, file: Path) -> Self:
-        """
-        Substitute for the lack in the ability to create many constructors in python.
+    def from_sqlite3(cls, file: Path, max_rows: int | None = None) -> Self:
+        """Substitute for the lack in the ability to create many constructors in python."""
+        database = Database.from_sqlite3(file, max_rows)
+        return cls.from_database(database)
 
-        :param file:
-        :return:
-        """
-        database = Database.from_sqlite3(file)
+    @classmethod
+    def from_database(cls, database: Database) -> Self:
 
+        magn = MAGNGraph()
+
+        print("Processing tables...")
         for table_name in database.sort():
-            table = database.tables[table_name]
-            for column in table.columns:
-                column_data = table[column]
+            table, keys = database[table_name]
+            p_keys, f_keys = keys
 
-        raise NotImplementedError()
-
-    @classmethod
-    def from_asa(cls, asa_graphs: List[ASAGraph]) -> Self:
-        """
-        Substitute for the lack in the ability to create many constructors in python.
-
-        :param asa_graphs:
-        :return:
-        """
-        raise NotImplementedError()
+            asa_graphs, objects = magn._process_table(table, p_keys, f_keys, table_name)
+            magn.asa_graphs += asa_graphs
+            magn.objects[table_name] = objects
+            print(f"Table {table_name} processed.")
+        print("Tables processed.")
+        return magn
 
     def fit(self, data: pd.DataFrame, num_epochs: int, learning_rate: float):
-        if 'Target' not in data.keys():
+        mock_name: Final[str] = Database.mock_column_name
+
+        if mock_name not in data.keys():
             raise NameError("Data must have a target column.")
 
-        data_no_target = data.drop(['Target'], axis=1)
-        data_target = data['Target']
-        asa_graphs = [self.get_asa_by_name(name) for name in data_no_target.keys()]
-
+        data_no_target = data.drop([mock_name], axis=1)
+        data_target = data[mock_name]
+        asa_graphs = [self.get_asa_by_name(name) for name in data_no_target.columns]
+        print("Teaching MAGN...")
         for epoch in range(num_epochs):
+            print(f"epoch {epoch}...")
             for idx, row in data_no_target.iterrows():
                 target_col = data_target[idx]
                 target_value = row[target_col]
                 row_no_target = row.drop([target_col])
-                activated_neurons = list(map(lambda _asa: _asa.search(row_no_target[_asa.name]), asa_graphs))
+                asa_no_target = [asa for asa in asa_graphs if asa.name != target_col]
+                activated_neurons = [_asa.search(row_no_target[_asa.name]) for _asa in asa_no_target]
 
                 self._update_priorities(activated_neurons, target_value, learning_rate)
 
     def predict(self, data: pd.Series, target: str):
-        activated_neurons = list(map(lambda _asa: _asa.search(data[_asa.name]), self.asa_graphs))
+        data_no_target = data
+        if target in data_no_target.keys():
+            data_no_target = data_no_target.drop(target)
+        asa_graphs = [asa for asa in self.asa_graphs if asa.name in data_no_target.keys()]
+        activated_neurons = list(map(lambda _asa: _asa.search(data_no_target[_asa.name]), asa_graphs))
+
         return self._calculate_prediction(activated_neurons, target)
 
     def get_asa_by_name(self, name: str) -> ASAGraph:
@@ -94,24 +94,110 @@ class MAGNGraph:
             f"ASA graph with name {name} not found, check your input data. Column names may be "
             f"incorrect.")
 
-    def _update_priorities(self, neurons: List[ASAElement], target_value: int | float | str, learning_rate: float):
+    def _process_table(self, table: pd.DataFrame,
+                       primary_keys: List[str],
+                       foreign_keys: Dict[str, Tuple[str, str]],
+                       table_name: str) -> Tuple[List[ASAGraph], List[MAGNObjectNode]]:
+        """
+        Create an ASA graph from a table.
+
+        :param table: the table
+        :param primary_keys: the primary keys of said table
+        :param foreign_keys: the foreign keys of said table
+        """
+        # First create the ASA graphs for primary keys
+        data = table.reset_index().dropna()
+
+        asa_graphs = []
+        for p_key in primary_keys:
+            asa = self._create_asa_graph(data, p_key)
+            asa_graphs.append(asa)
+
+        processed_cols = [f_key[0] for f_key in foreign_keys.values()] + primary_keys
+        table_not_processed = data.drop(processed_cols, axis=1)
+
+        for column_name in table_not_processed.columns:
+            asa = self._create_asa_graph(table_not_processed, column_name)
+            asa_graphs.append(asa)
+
+        objects = self._create_magn_objects(asa_graphs, data, table_name, foreign_keys)
+
+        return asa_graphs, objects
+
+    @classmethod
+    def _create_asa_graph(cls, table: pd.DataFrame, column_name: str) -> ASAGraph:
+        column = table[column_name]
+        asa_graph = ASAGraph(column_name)
+        for value in column:
+            asa_graph.insert(value, column_name)
+
+        return asa_graph
+
+    def _create_magn_objects(self, asa_graphs: List[ASAGraph], table: pd.DataFrame, table_name: str,
+                             foreign_keys: Dict[str, Tuple[str, str]]) -> list[MAGNObjectNode]:
+        objects = []
+        fk_cols = [f_key for f_key in foreign_keys.values()]
+        fk_names = [f_key[0] for f_key in foreign_keys.values()]
+
+        for idx, row in table.iterrows():
+            object_node = MAGNObjectNode(table_name)
+            for column_name, value in row.items():
+                if column_name in fk_names:
+                    continue
+                asa = self.get_first_asa_by_name(asa_graphs, str(column_name))
+                element = asa.search(value)
+                if element is None:
+                    raise ValueError(f"Element {value} not found in the \"{column_name}\" ASA graph.")
+
+                element.magn_objects.append(object_node)
+                object_node.values.append(element)
+
+            for fk_name, fk_foreign_name in fk_cols:
+                fk_value = row[fk_name]
+                self._add_object_foreign_keys(object_node, fk_foreign_name, fk_value)
+            objects.append(object_node)
+
+        return objects
+
+    def _add_object_foreign_keys(self, object_node: MAGNObjectNode, fk_foreign_name: str, fk_value: int | float | str):
+        asa = self.get_first_asa_by_name(self.asa_graphs, fk_foreign_name)
+        element = asa.search(fk_value)
+        if element is None:
+            raise ValueError(f"Element {fk_value} not found in the \"{fk_foreign_name}\" ASA graph.")
+
+        for obj in element.magn_objects:
+            obj.objects.append(object_node)
+
+    def _update_priorities(self, activated_columns: List[str], target_value: ASAElement, learning_rate: float) -> None:
         """
         Update the priorities of the neurons in the MAGN graph.
 
-        :param neurons: the neurons to update
+        :param neurons: Neurons to update
         :param target_value: the target value
         :param learning_rate: the learning rate
         """
-        if isinstance(target_value, str):
-            deltas = self._calc_delta_categorical(neurons, target_value)
-        else:
-            deltas = self._calc_delta_numerical(neurons, target_value)
+        # if isinstance(target_value, str):
+        #     deltas = self._calc_delta_categorical(neurons, target_value)
+        # else:
+        #     deltas = self._calc_delta_numerical(neurons, target_value)
 
-        for neuron, delta in zip(neurons, deltas):
-            if delta == 0.0:
-                neuron.priority *= (1 + learning_rate * neuron.key)
-            else:
-                neuron.priority *= (1 - learning_rate * delta * neuron.key)
+        # weź target value (ASAElement)
+        for column in activated_columns:
+            # TODO: bfs does not go into non-active node(ASAElement)
+            paths = self.bfs(target_value, column)
+            for path in paths:
+                for neuron in path:
+                    if isinstance(neuron.key, str):
+                        neuron.priority *= (1.0 - learning_rate * delta)
+                    elif delta == 0.0:
+                        neuron.priority *= (1.0 + learning_rate * neuron.key)
+                    else:
+                        neuron.priority *= (1.0 - learning_rate * delta * neuron.key)
+
+        # na każdej ścieżce od target_value do jakiejkolwiek ASAElement znajdującego się w ASAGraph, który został aktywowany (ASAGraphy, które odpowiadają kolumnom w danych wejściowych)
+        # na każdym neuronie na ścieżce
+
+
 
     def _calc_delta_categorical(self, neurons: List[ASAElement], target_value: str) -> List[float]:
         """
@@ -140,7 +226,8 @@ class MAGNGraph:
         deltas = []
 
         for neuron in neurons:
-            deltas.append(target_value - neuron.key)
+            if not isinstance(neuron.key, str):  # TODO: REALLY BAD, no isinstance...
+                deltas.append(target_value - neuron.key)
 
         return self._normalize(deltas)
 
@@ -153,7 +240,10 @@ class MAGNGraph:
         """
         max_value = max(values)
         min_value = min(values)
-        return [(value - min_value) / (max_value - min_value) for value in values]
+        return [
+            ((value - min_value) / (max_value - min_value) if (max_value - min_value) != 0.0 else 0.0)
+            for value in values
+        ]
 
     def _calculate_prediction(self, activated_neurons: List[ASAElement], target: str) -> int | float | str:
         """
@@ -197,7 +287,7 @@ class MAGNGraph:
     def _stimulation(self, path: List[AbstractNode]) -> float:
         stimulation = 0.0
         # Iterate over neighboring pairs
-        for i, (current_node, next_node) in enumerate(zip(path, path[1:])):
+        for current_node, next_node in pairwise(path):
             current_is_element = isinstance(current_node, ASAElement)
             current_is_object = isinstance(current_node, MAGNObjectNode)
             next_is_element = isinstance(next_node, ASAElement)
@@ -213,9 +303,17 @@ class MAGNGraph:
                 stimulation += current_node.priority * current_node.magn_weight()
 
             if current_is_object and next_is_element:
-                stimulation += current_node.priority * next_node.magn_weight()
+                stimulation += current_node.priority * 1.0
 
             if current_is_object and next_is_object:
                 stimulation += current_node.priority * next_node.magn_weight()
 
         return stimulation
+
+    @classmethod
+    def get_first_asa_by_name(cls, asa_graphs: List[ASAGraph], name: str) -> ASAGraph:
+        for asa_graph in asa_graphs:
+            if asa_graph.name == name:
+                return asa_graph
+
+        raise ValueError(f"ASA graph with name {name} not found.")

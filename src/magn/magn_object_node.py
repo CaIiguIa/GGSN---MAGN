@@ -1,7 +1,6 @@
 from typing import List
 
 from magn.abstract_node import AbstractNode
-from magn.asa.asa_element import ASAElement
 
 
 class MAGNObjectNode(AbstractNode):
@@ -15,20 +14,20 @@ class MAGNObjectNode(AbstractNode):
     objects:                list that stores the objects associated with the object.
     """
 
-    def __init__(self, clazz):
+    def __init__(self, clazz) -> None:
         self.clazz: str = clazz
         self.duplicates: int = 1
         self.priority: float = 1.0
-        self.values: List[ASAElement] = []
+        self.values: List[AbstractNode] = []  # ASAElements!
         self.objects: List[MAGNObjectNode] = []
 
     def neighbors(self) -> List[AbstractNode]:
         return self.objects + self.values
 
-    def magn_weight(self):
+    def magn_weight(self) -> float:
         """
-        Calculate the weight of the connection between this object and other MAGN object.
+        Calculate the weight of the connection between this object and another MAGN object.
         :param self:
-        :return: float, the weight of the connection between this object and other MAGN object.
+        :return: Weight of the connection between this object and another MAGN object.
         """
         return 1.0 / self.duplicates
