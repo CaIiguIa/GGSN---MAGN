@@ -81,6 +81,7 @@ class MAGNGraph:
             data_no_target = data_no_target.drop(target)
         asa_graphs = [asa for asa in self.asa_graphs if asa.name in data_no_target.keys()]
         activated_neurons = list(map(lambda _asa: _asa.search(data_no_target[_asa.name]), asa_graphs))
+        activated_neurons = [an for an in activated_neurons if an is not None]  # TODO: highly irresponsible
 
         return self._calculate_prediction(activated_neurons, target)
 
