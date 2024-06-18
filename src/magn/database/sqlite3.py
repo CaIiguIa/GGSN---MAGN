@@ -91,7 +91,7 @@ class SQLite3DataReader:
     columns: List[str]
     keys: Dict[str, Keys]
 
-    def read(self, max_rows: Optional[int] = None) -> Dict[str, pd.DataFrame]:
+    def read(self) -> Dict[str, pd.DataFrame]:
         """Read the data of the given tables in the SQLite3 database."""
         dataframes: Dict[str, pd.DataFrame] = {}
 
@@ -106,17 +106,13 @@ class SQLite3DataReader:
 
                 keys = self.keys[table]
 
-                if max_rows is not None:
-                    data = pd.read_sql_query(query, conn)
-                else:
-                    data = pd.read_sql_query(query, conn)
-
+                data = pd.read_sql_query(query, conn)
                 data.set_index(
                     list({*keys.primary_keys, *list(map(lambda x: x[0], keys.foreign_keys.values()))}),
                     inplace=True,
                 )
                 data.name = table
 
-                dataframes[table] = data.sort_index().head(max_rows)
+                dataframes[table] = data.sort_index()
 
         return dataframes

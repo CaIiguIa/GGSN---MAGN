@@ -27,9 +27,9 @@ class MAGNGraph:
     objects: Dict[str, List[MAGNObjectNode]] = field(default_factory=dict)
 
     @classmethod
-    def from_sqlite3(cls, file: Path, max_rows: int | None = None) -> Self:
+    def from_sqlite3(cls, file: Path) -> Self:
         """Substitute for the lack in the ability to create many constructors in python."""
-        database = Database.from_sqlite3(file, max_rows)
+        database = Database.from_sqlite3(file)
         return cls.from_database(database)
 
     @classmethod
