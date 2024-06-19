@@ -364,12 +364,13 @@ class MAGNGraph:
         if validation_data is None:
             return
 
-        for _, row in validation_data:
+        val_acc = []
+        for _, row in validation_data.iterrows():
             target = row["target"]
             x_test_no_target = row.drop("target")
             prediction = self.predict(x_test_no_target, target)
-            train_acc.append(prediction == row[target])
-        self.accuracy_history['validate'].append(sum(train_acc) / len(train_acc))
+            val_acc.append(prediction == row[target])
+        self.accuracy_history['validate'].append(sum(val_acc) / len(val_acc))
 
 
 
