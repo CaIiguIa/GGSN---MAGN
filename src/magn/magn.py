@@ -25,6 +25,7 @@ class MAGNGraph:
 
     asa_graphs: List[ASAGraph] = field(default_factory=list)
     objects: Dict[str, List[MAGNObjectNode]] = field(default_factory=dict)
+    accuracy_history: Dict[str, List[float]] = field(default_factory=dict)
 
     @classmethod
     def from_sqlite3(cls, file: Path) -> Self:
@@ -49,11 +50,17 @@ class MAGNGraph:
         print("Tables processed.")
         return magn
 
-    def fit(self, data: pd.DataFrame, num_epochs: int, learning_rate: float):
+    def fit(self, data: pd.DataFrame, num_epochs: int, learning_rate: float, validation_data: pd.DataFrame | None = None):
         mock_name: Final[str] = Database.mock_column_name
 
         if mock_name not in data.keys():
             raise NameError("Data must have a target column.")
+
+        if validation_data is not None and mock_name not in validation_data.keys():
+            raise NameError("Data must have a target column.")
+
+        self.accuracy_history['train'] = []
+        self.accuracy_history['validate'] = []
 
         data_no_target = data.drop([mock_name], axis=1)
         data_target = data[mock_name]
@@ -74,8 +81,12 @@ class MAGNGraph:
                 activated_col_names = data_no_target.columns
 
                 self._update_priorities(activated_neurons, activated_col_names, target_element, learning_rate)
+            self._evaluate_model(data, validation_data)
 
-    def predict(self, data: pd.Series, target: str):
+        return self.accuracy_history
+
+
+    def predict(self, data: pd.Series, target: str) -> int | float | str:
         data_no_target = data
         if target in data_no_target.keys():
             data_no_target = data_no_target.drop(target)
@@ -278,11 +289,18 @@ class MAGNGraph:
         return max_element.key
 
     def bfs(self, start_node: ASAElement, target_feature: str | ASAElement):
+        """
+        Traverse the MAGN graph from the start_node, while looking for target_feature with BFS.
+        Returns all found unique paths
+
+        :param start_node: start node of BFS search
+        :param target_feature: target feature. It can be an ASAElement (found paths will connect it with start_node) or
+        string - target feature (will find all paths to any ASAElement from this target feature)
+        :return: all found unique paths
+        """
         queue: deque[(AbstractNode, List[AbstractNode])] = deque(
             [(start_node, [start_node])])  # queue of (current_node, path)
         paths = []
-        target_is_element = isinstance(target_feature, ASAElement)
-        target_is_column = isinstance(target_feature, str)
 
         while queue:
             current_node, path = queue.popleft()
@@ -333,6 +351,27 @@ class MAGNGraph:
                 stimulation += current_node.priority * next_node.magn_weight()
 
         return stimulation
+
+    def _evaluate_model(self, train_data: pd.DataFrame, validation_data: pd.DataFrame | None):
+        train_acc = []
+        for _, row in train_data.iterrows():
+            target = row["target"]
+            x_test_no_target = row.drop("target")
+            prediction = self.predict(x_test_no_target, target)
+            train_acc.append(prediction == row[target])
+
+        self.accuracy_history['train'].append(sum(train_acc) / len(train_acc))
+        if validation_data is None:
+            return
+
+        for _, row in validation_data:
+            target = row["target"]
+            x_test_no_target = row.drop("target")
+            prediction = self.predict(x_test_no_target, target)
+            train_acc.append(prediction == row[target])
+        self.accuracy_history['validate'].append(sum(train_acc) / len(train_acc))
+
+
 
     @classmethod
     def get_first_asa_by_name(cls, asa_graphs: List[ASAGraph], name: str) -> ASAGraph:
