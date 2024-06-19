@@ -75,8 +75,7 @@ class MAGNGraph:
                 activated_col_names = data_no_target.columns
 
                 self._update_priorities(activated_neurons, activated_col_names, target_element, learning_rate)
-                # if epoch > 0 and epoch % 10 == 0:
-                #     self._normalize_priorities()
+                # self._normalize_priorities()
 
     def predict(self, data: pd.Series, target: str, prediction_type: PredictionType) -> int | float | str:
         data_no_target = data
@@ -200,8 +199,8 @@ class MAGNGraph:
 
         for activated_neuron in activated_neurons:
             paths = self.bfs(target_value, activated_neuron)
-            activations = [self._stimulation(path) for path in paths]
-            activations = self._normalize(activations)
+            activations0 = [self._stimulation(path) for path in paths]
+            activations = self._normalize(activations0)
             for path, activation in zip(paths, activations):
                 neuron_idx = activated_neurons.index(path[-1])
                 delta = deltas[neuron_idx]
@@ -307,8 +306,6 @@ class MAGNGraph:
         queue: deque[(AbstractNode, List[AbstractNode])] = deque(
             [(start_node, [start_node])])  # queue of (current_node, path)
         paths = []
-        target_is_element = isinstance(target_feature, ASAElement)
-        target_is_column = isinstance(target_feature, str)
 
         while queue:
             current_node, path = queue.popleft()
@@ -383,15 +380,18 @@ class MAGNGraph:
                 if obj.priority < min_priority:
                     min_priority = obj.priority
 
+        if max_priority < 1000.0:
+            return
+
         # normalize priorities
         for asa in self.asa_graphs:
             for element in asa.get_elements():
                 element.priority = ((element.priority - min_priority) / (max_priority - min_priority)
-                                    if (max_priority - min_priority) != 0.0 else 0.0)
+                                    if (max_priority - min_priority) != 0.0 else 0.1)
         for table in self.objects.keys():
             for obj in self.objects[table]:
                 obj.priority = ((obj.priority - min_priority) / (max_priority - min_priority)
-                                if (max_priority - min_priority) != 0.0 else 0.0)
+                                if (max_priority - min_priority) != 0.0 else 0.1)
 
     @classmethod
     def get_first_asa_by_name(cls, asa_graphs: List[ASAGraph], name: str) -> ASAGraph:

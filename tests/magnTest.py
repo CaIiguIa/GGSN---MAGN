@@ -19,14 +19,14 @@ database = mock_database()
 magn = MAGNGraph.from_database(database)
 
 x_train = database.create_mock_target('reviews', seed_id=random.randint(0, 1000))
-magn.fit(x_train, 500, 0.1)
+magn.fit(x_train, 10000, 0.1)
 
-x_test = x_train.iloc[4]
+x_test = x_train.iloc[2]
 x_test = pd.Series(x_test)
 x_test.drop("target", inplace=True)
 print(x_test)
 print(x_test.keys())
-prediction = magn.predict(x_test, 'score', prediction_type=PredictionType.CATEGORICAL)
+prediction = magn.predict(x_test, 'score', prediction_type=PredictionType.REGRESSION)
 print(f"Predicted score: {prediction}, should be {x_test['score']}")
 
 # TODO: wszędzie mamy założenie, że dane kategoryczne są w postaci stringów, ale to nie zawsze jest prawda
