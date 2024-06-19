@@ -13,6 +13,7 @@ from magn.asa.asa_element import ASAElement
 from magn.asa.asa_graph import ASAGraph
 from magn.database.database import Database
 from magn.magn_object_node import MAGNObjectNode
+from magn.prediction_type import PredictionType
 
 
 @dataclass(slots=True)
@@ -74,16 +75,24 @@ class MAGNGraph:
                 activated_col_names = data_no_target.columns
 
                 self._update_priorities(activated_neurons, activated_col_names, target_element, learning_rate)
+                # if epoch > 0 and epoch % 10 == 0:
+                #     self._normalize_priorities()
 
-    def predict(self, data: pd.Series, target: str):
+    def predict(self, data: pd.Series, target: str, prediction_type: PredictionType) -> int | float | str:
         data_no_target = data
         if target in data_no_target.keys():
             data_no_target = data_no_target.drop(target)
         asa_graphs = [asa for asa in self.asa_graphs if asa.name in data_no_target.keys()]
         activated_neurons = list(map(lambda _asa: _asa.search(data_no_target[_asa.name]), asa_graphs))
+        # activated_neurons = [_asa.search(data_no_target[_asa.name]) for _asa in asa_graphs]
         activated_neurons = [an for an in activated_neurons if an is not None]  # TODO: highly irresponsible
 
-        return self._calculate_prediction(activated_neurons, target)
+        target_asa = self.get_first_asa_by_name(self.asa_graphs, target)
+        if prediction_type == PredictionType.REGRESSION:
+            if isinstance(target_asa.leftmost_element().key, str):
+                raise ValueError("Regression prediction type requires numerical target.")
+
+        return self._calculate_prediction(activated_neurons, target, prediction_type)
 
     def get_asa_by_name(self, name: str) -> ASAGraph:
         """
@@ -254,7 +263,8 @@ class MAGNGraph:
             for value in values
         ]
 
-    def _calculate_prediction(self, activated_neurons: List[ASAElement], target: str) -> int | float | str:
+    def _calculate_prediction(self, activated_neurons: List[ASAElement], target: str,
+                              prediction_type: PredictionType) -> int | float | str:
         """
         Calculate the prediction based on the activated neurons.
 
@@ -270,12 +280,28 @@ class MAGNGraph:
         for neuron in activated_neurons:
             paths += self.bfs(neuron, target)
 
-        stimulation = list(map(lambda path: self._stimulation(path), paths))
+        stimulation = [self._stimulation(path) for path in paths]
+
+        if prediction_type == PredictionType.CATEGORICAL:
+            return self._predict_categorical(paths, stimulation)
+        elif prediction_type == PredictionType.REGRESSION:
+            return self._predict_regression(paths, stimulation)
+
+    def _predict_categorical(self, paths: List[List[AbstractNode]], stimulation: List[float]) -> int | float | str:
         max_stimuli = stimulation.index(max(stimulation))
         max_element = paths[max_stimuli][-1]
         if not isinstance(max_element, ASAElement):
             raise ValueError("Implementation error. The target feature is not an ASA element.")
         return max_element.key
+
+    def _predict_regression(self, paths: List[List[AbstractNode]], stimulation: List[float]) -> int | float:
+        prediction_sum = 0.0
+        norm_stimulation = self._normalize(stimulation)
+
+        for path, stim in zip(paths, norm_stimulation):
+            prediction_sum += path[-1].key * stim
+
+        return prediction_sum
 
     def bfs(self, start_node: ASAElement, target_feature: str | ASAElement):
         queue: deque[(AbstractNode, List[AbstractNode])] = deque(
@@ -333,6 +359,39 @@ class MAGNGraph:
                 stimulation += current_node.priority * next_node.magn_weight()
 
         return stimulation
+
+    def _normalize_priorities(self) -> None:
+        """
+        return [
+            ((value - min_value) / (max_value - min_value) if (max_value - min_value) != 0.0 else 0.0)
+            for value in values
+        ]
+        """
+        # find min and max value
+        max_priority = 0.0
+        min_priority = 0.0
+        for asa in self.asa_graphs:
+            for element in asa.get_elements():
+                if element.priority > max_priority:
+                    max_priority = element.priority
+                if element.priority < min_priority:
+                    min_priority = element.priority
+        for table in self.objects.keys():
+            for obj in self.objects[table]:
+                if obj.priority > max_priority:
+                    max_priority = obj.priority
+                if obj.priority < min_priority:
+                    min_priority = obj.priority
+
+        # normalize priorities
+        for asa in self.asa_graphs:
+            for element in asa.get_elements():
+                element.priority = ((element.priority - min_priority) / (max_priority - min_priority)
+                                    if (max_priority - min_priority) != 0.0 else 0.0)
+        for table in self.objects.keys():
+            for obj in self.objects[table]:
+                obj.priority = ((obj.priority - min_priority) / (max_priority - min_priority)
+                                if (max_priority - min_priority) != 0.0 else 0.0)
 
     @classmethod
     def get_first_asa_by_name(cls, asa_graphs: List[ASAGraph], name: str) -> ASAGraph:
