@@ -16,6 +16,9 @@ class ASAElement(AbstractNode):
     magn_object:            list that stores the MAGN graph objects associated with the node.
     """
 
+    def __eq__(self, __value) -> bool:
+        return isinstance(__value, ASAElement) and self.key == __value.key and self.feature == __value.feature
+
     def __init__(self, key: int | float | str, feature: str) -> None:
         if key is None:
             raise ValueError("Key cannot be None")
@@ -34,7 +37,7 @@ class ASAElement(AbstractNode):
         # MAGN
         self.magn_objects: List[MAGNObjectNode] = []  # List of MAGN objects
 
-    def magn_weight(self):
+    def magn_weight(self) -> float:
         """
         Calculate the weight of the connection between this element and MAGN object.
         :param self:
